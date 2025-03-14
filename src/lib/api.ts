@@ -104,6 +104,7 @@ export interface UserData {
   created_at: string;
   updated_at: string;
   deadline_date: string;
+  whatsapp_number: string | null;
 }
 
 export interface Assignment {
@@ -267,7 +268,7 @@ export async function getUserData(userId: string): Promise<UserData | null> {
       .from('users')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
     return data;
@@ -558,12 +559,18 @@ export async function removeReaction(
 
 export async function getChildren(): Promise<Child[]> {
   try {
+    console.log('Fetching children data...');
     const { data, error } = await supabase
       .from('children')
       .select('*')
       .order('created_at');
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching children:', error);
+      throw error;
+    }
+    
+    console.log('Children data received:', data);
     return data || [];
   } catch (error) {
     handleError(error, 'getChildren');

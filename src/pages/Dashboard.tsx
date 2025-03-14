@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, Share2, ArrowRight, LogOut, Settings2 } from 'lucide-react';
+import { Copy, Share2, ArrowRight, LogOut, Settings2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { getFundraisingAmount, FundraisingAmount, getUserData, UserData, getDonationStats, getDonations, getChildren, Child } from '../lib/api';
@@ -16,11 +16,16 @@ export default function Dashboard() {
   const [showLogoutMenu, setShowLogoutMenu] = useState(false);
   const [showAdjust, setShowAdjust] = useState(false);
   const [targetAmount, setTargetAmount] = useState(30000);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       if (user) {
         try {
+
+          console.log("user ID",user);
+          
           const [fundData, uData, stats, donations, childrenData] = await Promise.all([
             getFundraisingAmount(user.id),
             getUserData(user.id),
@@ -46,6 +51,8 @@ export default function Dashboard() {
           setUserData(uData);
           setDonationStats(stats);
           setChildren(childrenData);
+          console.log("childrens",childrenData);
+          
           console.log("user data", userData);
           
         } catch (error) {
@@ -103,6 +110,8 @@ export default function Dashboard() {
 
   // Calculate number of children supported
   const childrenSupported = Math.max(1, Math.floor((currentAmount / 35000) * 2));
+  console.log("user data2",userData);
+  
   const displayName = userData?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
   
   const progress = Math.min((currentAmount / 100000) * 180, 180); // Max 180 degrees for semi-circle
@@ -197,7 +206,7 @@ export default function Dashboard() {
                   backgroundSize: "contain",
                   backgroundPosition: "center",
                   width: "100%",
-                  height: "100%",
+                  height: "90%",
                   
                 }}
               ></div>
@@ -251,13 +260,13 @@ export default function Dashboard() {
             <Settings2 size={20} />
           </button> */}
           
-          <p className="text-center text-sm mt-4 text-red-500">
-            *Will help us fund the education of {childrenSupported} {childrenSupported === 1 ? 'child' : 'children'} for an entire year.
+          <p className="text-center text-sm mt-4 ">
+            *This funds a year of education for <span className='text-red-500'>{childrenSupported} {childrenSupported === 1 ? 'child' : 'children'}</span>.
           </p>
         </div>
 
         {/* Rank Card */}
-        <div className="bg-red-100 rounded-xl p-4 mb-6">
+        <div className="bg-red-100 rounded-xl p-4 mb-6 mt-4" >
           <p className="text-gray-600 text-sm mb-1">Your Rank</p>
           <h3 className="text-xl font-bold text-red-800">{rankTitle}</h3>
           <p className="text-red-500 text-sm">{rankLevel}</p>
@@ -265,20 +274,22 @@ export default function Dashboard() {
 
         {/* Share Buttons */}
         <div className="grid grid-cols-2 gap-4">
-          <button 
-            onClick={copyReferralLink}
-            className="flex items-center justify-center gap-2 bg-indigo-100 text-indigo-600 py-3 px-4 rounded-xl hover:bg-indigo-200 transition-colors"
-          >
-            <span className="font-medium">Copy Link For Referral</span>
-            <Copy size={20} />
-          </button>
-          <button 
-            onClick={shareOnWhatsapp}
-            className="flex items-center justify-center gap-2 bg-green-100 text-green-600 py-3 px-4 rounded-xl hover:bg-green-200 transition-colors"
-          >
-            <span className="font-medium">Direct Whatsapp Message Link</span>
-            <Share2 size={20} />
-          </button>
+        <button 
+          onClick={copyReferralLink}
+          className="flex items-center justify-center gap-2 bg-indigo-100 text-indigo-600 py-2 px-3 md:py-3 md:px-4 rounded-xl hover:bg-indigo-200 transition-colors text-sm md:text-base"
+        >
+          <span className="font-medium">Copy Link</span>
+          <Copy size={16} />
+        </button>
+
+        <button 
+          onClick={shareOnWhatsapp}
+          className="flex items-center justify-center gap-2 bg-green-100 text-green-600 py-2 px-3 md:py-3 md:px-4 rounded-xl hover:bg-green-200 transition-colors text-sm md:text-base"
+        >
+          <span className="font-medium">WhatsApp</span>
+          <Share2 size={16} />
+        </button>
+
         </div>
       </div>
 
@@ -300,22 +311,26 @@ export default function Dashboard() {
           {children.slice(0, 4).map(child => (
             <div 
               key={child.id}
-              onClick={() => navigate(`/children/${child.id}`)}
-              className="bg-amber-100 rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => {
+                setSelectedChild(child); // Set the selected child
+                setShowModal(true); // Open the modal
+              }}
+              className="bg-amber-100  overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow border-4 border-[#ffd166] rounded-2xl p-1"
+              
             >
               <div className="relative">
                 <img 
                   src={child.image_url} 
                   alt={child.name}
-                  className="w-full h-32 object-cover"
+                  className="w-full h-32 object-cover border-0 rounded-xl"
                 />
                 {child.priority === 'High' && (
-                  <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                  <div className="absolute top-2 left-2 bg-green-500 text-white text-[0.6rem] leading-[0.8rem] px-2 py-1 rounded-full">
                     High Priority
                   </div>
                 )}
               </div>
-              <div className="p-3">
+              <div className="py-1 px-1">
                 <h3 className="text-lg font-bold text-indigo-600">{child.name}</h3>
                 <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
                   <div className="flex items-center">
@@ -328,19 +343,65 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="flex mt-2 gap-2">
-                  <button className="bg-red-500 text-white text-xs px-3 py-1 rounded-full">
-                    Assignment
-                  </button>
-                  <button className="bg-indigo-500 text-white text-xs px-3 py-1 rounded-full">
-                    See More
-                  </button>
+                <button className="bg-red-500 text-white text-[10px] md:text-xs px-2 md:px-3 py-1 rounded-full">
+                  Assignment
+                </button>
+                {/* <button className="bg-indigo-500 text-white text-[10px] md:text-xs px-2 md:px-3 py-1 rounded-full">
+                  See More
+                </button> */}
+
                 </div>
               </div>
+             
             </div>
+            
           ))}
         </div>
       </div>
+      {showModal && selectedChild && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-xl p-6 w-full max-w-md relative">
+      {/* Close Button (X) */}
+      <button 
+        onClick={() => {
+          setShowModal(false);
+          setSelectedChild(null); // Reset selected child
+        }} 
+        className="absolute top-2 right-2"
+      >
+        <X size={24} />
+      </button>
 
+      {/* Modal Content */}
+      <div className="flex items-center gap-4">
+        <img src={selectedChild.image_url} alt={selectedChild.name} className="w-20 h-20 rounded-full object-cover" />
+        <div>
+          <h2 className="text-xl font-bold text-indigo-600">{selectedChild.name}</h2>
+          <p className="text-gray-500">{selectedChild.age} years</p>
+          <p className="text-gray-500"><span className="mr-1">📍</span>{selectedChild.location}</p>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold text-gray-700">Description</h3>
+        <div className="mt-1 max-h-60 overflow-y-auto text-sm text-gray-600">
+          {selectedChild.description}
+        </div>
+      </div>
+
+      {/* Close Button */}
+      <button
+        onClick={() => {
+          setShowModal(false);
+          setSelectedChild(null); // Reset selected child
+        }}
+        className="mt-6 w-full bg-amber-500 text-white py-3 rounded-xl font-medium hover:bg-amber-600 transition-colors"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
       {/* Crowdfunding Hacks */}
       <div className="mt-8">
         <div className="flex items-center gap-2 mb-4">

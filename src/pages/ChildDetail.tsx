@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { X, ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { getChildById, Child } from '../lib/api';
 
@@ -13,7 +13,7 @@ export default function ChildDetail() {
   useEffect(() => {
     async function fetchChild() {
       if (!id) return;
-      
+
       try {
         const data = await getChildById(id);
         setChild(data);
@@ -52,13 +52,9 @@ export default function ChildDetail() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="relative">
-        <img 
-          src={child.image_url} 
-          alt={child.name}
-          className="w-full h-64 object-cover"
-        />
+        <img src={child.image_url} alt={child.name} className="w-full h-64 object-cover" />
         <div className="absolute top-0 left-0 right-0 p-4">
-          <Link to="/children" className=" backdrop-blur-sm p-2 rounded-full text-white">
+          <Link to="/children" className="backdrop-blur-sm p-2 rounded-full text-white">
             <ArrowLeft size={24} />
           </Link>
         </div>
@@ -78,81 +74,48 @@ export default function ChildDetail() {
               <p className="text-gray-500 text-sm">Location</p>
               <p className="font-bold">{child.location}</p>
             </div>
-            {child.priority === 'High' && (
-              <div className="col-span-2">
-                <p className="text-gray-500 text-sm">Priority</p>
-                <p className="font-bold text-green-600">{child.priority}</p>
-              </div>
-            )}
           </div>
 
-          <div className="mb-4">
-            <h2 className="text-lg font-bold text-indigo-600 mb-2">About {child.name}</h2>
-            <p className="text-gray-700">{child.description}</p>
-          </div>
-
-          <div className="flex gap-4">
-            <button 
-              onClick={() => setShowModal(true)}
-              className="flex-1 bg-red-500 text-white py-3 rounded-xl font-medium hover:bg-red-600 transition-colors"
-            >
-              Assign to Me
-            </button>
-            <button className="flex-1 bg-indigo-500 text-white py-3 rounded-xl font-medium hover:bg-indigo-600 transition-colors">
-              Support
-            </button>
-          </div>
-        </div>
-
-        <div className="bg-amber-100 rounded-xl p-4">
-          <h2 className="text-lg font-bold text-indigo-600 mb-2">Education Details</h2>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <p className="text-gray-700">Current Grade</p>
-              <p className="font-medium">Grade {child.age - 5}</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-gray-700">School Name</p>
-              <p className="font-medium">Muskurahat Foundation School</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-gray-700">Favorite Subject</p>
-              <p className="font-medium">Mathematics</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-gray-700">Academic Performance</p>
-              <p className="font-medium">Good</p>
-            </div>
-          </div>
+          <button
+            onClick={() => setShowModal(true)}
+            className="w-full bg-indigo-500 text-white py-3 rounded-xl font-medium hover:bg-indigo-600 transition-colors"
+          >
+            View Details
+          </button>
         </div>
       </div>
 
-      {/* Assignment Modal */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-center mb-4">Assign {child.name} to Me</h2>
-            <p className="text-gray-700 mb-6">
-              By assigning {child.name} to yourself, you commit to supporting their education and well-being. 
-              You'll receive regular updates about their progress.
-            </p>
-            <div className="flex gap-4">
-              <button 
-                onClick={() => setShowModal(false)}
-                className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={() => {
-                  alert(`${child.name} has been assigned to you!`);
-                  setShowModal(false);
-                }}
-                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition-colors"
-              >
-                Confirm
-              </button>
+          <div className="bg-white rounded-xl p-6 w-full max-w-md relative">
+            {/* Close Button */}
+            <button onClick={() => setShowModal(false)} className="absolute top-3 right-3 text-gray-600 hover:text-gray-800">
+              <X size={24} />
+            </button>
+
+            {/* Image and Name */}
+            <div className="flex items-center gap-4">
+              <img src={child.image_url} alt={child.name} className="w-20 h-20 rounded-full object-cover" />
+              <div>
+                <h2 className="text-xl font-bold text-indigo-600">{child.name}</h2>
+                <p className="text-gray-500">{child.age} years</p>
+              </div>
             </div>
+
+            {/* Description */}
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold text-gray-700">Description</h3>
+              <p className="text-gray-600 text-sm mt-1">{child.description}</p>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="mt-6 w-full bg-amber-500 text-white py-3 rounded-xl font-medium hover:bg-amber-600 transition-colors"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

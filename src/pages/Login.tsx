@@ -4,7 +4,7 @@ import { useAuth } from '../lib/AuthContext';
 import LoginButton from '../components/LoginButton';
 import { ArrowLeft } from 'lucide-react';
 
-type OnboardingStep = 'splash' | 'intro' | 'login' | 'name' | 'whatsapp' | 'avatar';
+type OnboardingStep = 'splash' | 'intro' | 'login' | 'loading' | 'name' | 'whatsapp' | 'avatar';
 
 const avatars = [
   { id: 1, url: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop' },
@@ -71,34 +71,34 @@ export default function Login() {
     switch (step) {
       case 'splash':
         return (
-          <div className={`${containerClass} flex flex-col items-center justify-center`}>
-            <div className="w-32 h-32 mb-4">
+          <div className={`${containerClass} flex flex-col items-center justify-center`} style={{backgroundImage:"url('src/assets/splashBG.svg')"}}>
+            <div className="w-96 h-auto mb-12">
               <img 
-                src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=200&h=200&fit=crop"
+                src="src/assets/pledgeLogo.webp"
                 alt="Logo"
-                className="w-full h-full object-cover rounded-full"
+                className="w-full h-full "
               />
             </div>
-            <h1 className="text-2xl font-bold text-gray-800">PLEDGE A SMILE</h1>
-            <p className="text-gray-600">FOUNDATION</p>
+            {/* <h1 className="text-2xl font-bold text-gray-800">PLEDGE A SMILE</h1>
+            <p className="text-gray-600">FOUNDATION</p> */}
           </div>
+          
         );
-
       case 'intro':
         return (
-          <div className={`${containerClass} flex flex-col items-center justify-center p-6`}>
+          <div className={`${containerClass} flex flex-col items-center justify-center p-6`} style={{backgroundImage:"url('src/assets/splashBG.svg')"}}>
             <img 
-              src="https://images.unsplash.com/photo-1577896851231-70ef18881754?w=400&h=300&fit=crop"
+              src="src/assets/teaching.svg"
               alt="Onboarding"
-              className="w-64 h-48 object-cover rounded-2xl mb-8"
+              className="w-96 h-auto object-cover rounded-2xl mb-8"
             />
-            <h1 className="text-2xl font-bold text-gray-800 mb-4">Be a change-maker!</h1>
-            <p className="text-gray-600 text-center mb-8 max-w-md">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">Be a change-maker!</h1>
+            <p className="text-gray-600 text-center mb-8 max-w-md text-xl">
               Gain real-world experience while creating meaningful change. Join our internship program and be part of something bigger.
             </p>
             <button
               onClick={() => setStep('login')}
-              className="w-full max-w-md bg-red-500 text-white py-3 rounded-full font-medium hover:bg-red-600 transition-colors"
+              className="w-full max-w-md bg-red-500 text-white py-3 rounded-full font-medium hover:bg-red-600 transition-colors text-xl"
             >
               Get Started
             </button>
@@ -107,26 +107,44 @@ export default function Login() {
 
       case 'login':
         return (
-          <div className={`${containerClass} flex flex-col items-center justify-center p-6`}>
-            <div className="w-32 h-32 mb-8">
+          <div className={`${containerClass} flex flex-col items-center justify-center p-6`} style={{backgroundImage:"url('src/assets/splashBG.svg')"}}>
+            <div className="w-96 h-auto mb-12">
               <img 
-                src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=200&h=200&fit=crop"
+                src="src/assets/pledgeLogo.webp"
                 alt="Logo"
                 className="w-full h-full object-cover rounded-full"
               />
             </div>
-            <div className="w-full max-w-md">
-              <LoginButton onSuccess={() => setStep('name')} />
-              <p className="mt-4 text-sm text-gray-500 text-center">
-                By continuing, you agree to our Terms of Service & Privacy Policy
-              </p>
+            <div className="w-full max-w-md text-xl">
+            <LoginButton onSuccess={() => {
+              setStep('loading');
+              setTimeout(() => setStep('name'), 2000); // Show loading for 2 seconds
+            }} />
             </div>
           </div>
         );
-
+      case 'loading':
+        return (
+          <div className={`${containerClass} flex flex-col items-center justify-center p-6`} style={{backgroundImage:"url('src/assets/splashBG.svg')"}}>
+            <div className="w-96 h-auto mb-12">
+              <img 
+                src="src/assets/pledgeLogo.webp"
+                alt="Logo"
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
+            <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Please wait..
+                  </label>
+                </div>
+              </div>
+          </div>
+        );
       case 'name':
         return (
-          <div className={`${containerClass} flex flex-col p-6`}>
+          <div className={`${containerClass} flex flex-col p-6`} style={{backgroundImage:"url('src/assets/splashBG.svg')"}}>
             <button 
               onClick={() => setStep('login')}
               className="p-2 -ml-2 text-gray-600 hover:text-gray-900"
