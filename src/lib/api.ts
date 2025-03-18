@@ -156,33 +156,38 @@ export interface Child {
 
 export async function getTrainingModules(): Promise<TrainingModule[]> {
   try {
-    const { data, error } = await supabase
-      .from('training_modules')
-      .select('*')
-      .order('number');
-      
-    if (error) throw error;
-    return data || [];
+    const response = await fetch('/api/training-modules');
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      console.error('Invalid response format:', data);
+      return []; // Return an empty array if the response is invalid
+    }
+
+    return data;
   } catch (error) {
-    handleError(error, 'getTrainingModules');
+    console.error('Error fetching training modules:', error);
     return [];
   }
 }
 
 export async function getPodcasts(): Promise<Podcast[]> {
   try {
-    const { data, error } = await supabase
-      .from('podcasts')
-      .select('*')
-      .order('number');
-      
-    if (error) throw error;
-    return data || [];
+    const response = await fetch('/api/podcasts');
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      console.error('Invalid response format:', data);
+      return []; // Return an empty array if the response is invalid
+    }
+
+    return data;
   } catch (error) {
-    handleError(error, 'getPodcasts');
+    console.error('Error fetching podcasts:', error);
     return [];
   }
 }
+
 
 export async function getFundraisingAmount(userId: string): Promise<FundraisingAmount | null> {
   try {

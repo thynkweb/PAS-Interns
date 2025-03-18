@@ -66,7 +66,7 @@ export default function Dashboard() {
     fetchData();
   }, [user]);
 
-  const donateUrl = `https://www.muskurahat.org.in/donate?r=${userData?.referral_code || ''}`;
+  const donateUrl = `https://www.muskurahat.org.in/donate?r=${userData?.referral_code || 'Invalid_code'}`;
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(donateUrl);
@@ -125,7 +125,7 @@ export default function Dashboard() {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="bg-white rounded-full px-3 py-2 text-gray-700 text-sm font-medium">
-              Days left <span className="text-indigo-600 font-bold ml-1">{userData?.days_left || 30}</span>
+              Days left <span className="text-indigo-600 font-bold ml-1">{userData?.days_left || 'Invalid'}</span>
             </div>
           </div>
           {user ? (
@@ -266,11 +266,16 @@ export default function Dashboard() {
         </div>
 
         {/* Rank Card */}
-        <div className="bg-red-100 rounded-xl p-4 mb-6 mt-4" >
-          <p className="text-gray-600 text-sm mb-1">Your Rank</p>
-          <h3 className="text-xl font-bold text-red-800">{rankTitle}</h3>
-          <p className="text-red-500 text-sm">{rankLevel}</p>
-        </div>
+        {/* Rank Card */}
+<div 
+  className="bg-red-100 rounded-xl p-4 mb-6 mt-4"
+  onClick={() => navigate('/rank-details', { state: { currentAmount } })}
+  style={{ cursor: 'pointer' }}
+>
+  <p className="text-gray-600 text-sm mb-1">Your Rank</p>
+  <h3 className="text-xl font-bold text-red-800">{rankTitle}</h3>
+  <p className="text-red-500 text-sm">{rankLevel}</p>
+</div>
 
         {/* Share Buttons */}
         <div className="grid grid-cols-2 gap-4">

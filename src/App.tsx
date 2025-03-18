@@ -6,12 +6,13 @@ import Login from './pages/Login';
 import Donations from './pages/Donations';
 import Explore from './pages/Explore';
 import Community from './pages/Community';
-import Insights from './pages/Insights';
+import Contact from './pages/Contact';
 import CrowdfundingHacks from './pages/CrowdfundingHacks';
 import Children from './pages/Children';
 import ChildDetail from './pages/ChildDetail';
 import { AuthProvider } from './lib/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import RankDetailPage from './pages/Rank';
 
 function App() {
   return (
@@ -27,7 +28,7 @@ function App() {
             </ProtectedRoute>
           }>
             <Route index element={<Dashboard />} />
-            <Route path="insights" element={<Insights />} />
+            <Route path="insights" element={<Contact />} />
             <Route path="donations" element={<Donations />} />
             <Route path="explore" element={ <Explore />} />
             <Route path="community" element={<Community />} />
@@ -35,6 +36,7 @@ function App() {
             <Route path="children" element={<Children />} />
             <Route path="children/:id" element={<ChildDetail />} />
             <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/rank-details" element={<RankDetailPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

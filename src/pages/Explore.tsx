@@ -83,44 +83,36 @@ export default function Explore() {
         <div className="space-y-8">
           {/* Training Modules */}
           <section>
-            <h2 className="text-2xl font-bold mb-4">
-              <span className="text-indigo-700">TRAINING</span>{' '}
-              <span className="text-red-500">MODULES</span>
-            </h2>
-            <div className="space-y-4">
-              {trainingModules.map((module) => (
-                <div
-                  key={module.id}
-                  className="bg-white border-2 border-gray-100 rounded-xl p-4 relative"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-orange-400 font-bold mb-1">
-                        MODULE {module.number}
-                      </h3>
-                      <p className="text-gray-900 font-medium">{module.title}</p>
-                      {module.description && (
-                        <p className="text-gray-600 text-sm mt-1">{module.description}</p>
-                      )}
-                    </div>
-                    {module.video_url && (
-                      <button 
-                        onClick={() => handlePlayClick(module.video_url)}
-                        className="w-12 h-12 rounded-full bg-indigo-700 flex items-center justify-center flex-shrink-0 hover:bg-indigo-600 transition-colors"
-                      >
-                        <Play size={24} className="text-white ml-1" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+  <h2 className="text-2xl font-bold mb-4">
+    <span className="text-indigo-700">TRAINING</span>{' '}
+    <span className="text-red-500">MODULES</span>
+  </h2>
+  <div className="space-y-4">
+    {trainingModules.length > 0 ? (
+      trainingModules.map((module) => (
+        <div key={module.id} className="bg-white border-2 border-gray-100 rounded-xl p-4 relative">
+          <h3 className="text-orange-400 font-bold mb-1">MODULE {module.number}</h3>
+          <p className="text-gray-900 font-medium">{module.title}</p>
+          {module.video_url && (
+            <button 
+              onClick={() => handlePlayClick(module.video_url)}
+              className="w-12 h-12 rounded-full bg-indigo-700 flex items-center justify-center flex-shrink-0 hover:bg-indigo-600 transition-colors"
+            >
+              <Play size={24} className="text-white ml-1" />
+            </button>
+          )}
+        </div>
+      ))
+    ) : (
+      <p className="text-gray-500">No training modules available.</p>
+    )}
+  </div>
+</section>
 
           {/* Assignment Section */}
-          <section>
+          {/* <section>
             <Assignment assignmentId="f7d7ce3e-e6b5-4f8b-a7b0-b7a3e0c29f1f" />
-          </section>
+          </section> */}
 
           {/* Podcasts */}
           <section>
