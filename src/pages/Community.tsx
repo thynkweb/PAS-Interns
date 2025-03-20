@@ -11,6 +11,7 @@ const CommunityPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<string | null>(null);
   
   useEffect(() => {
     async function fetchComments() {
@@ -34,9 +35,15 @@ const CommunityPage = () => {
 
     setIsSubmitting(true);
     try {
-      const comment = await createComment(message);
-      setComments([comment, ...comments]);
+      await createComment(message);
+      // Note: We don't add the comment to the comments array since it's not approved yet
       setMessage('');
+      setSubmissionStatus('Your comment has been submitted and is pending approval.');
+      
+      // Clear the status message after 5 seconds
+      setTimeout(() => {
+        setSubmissionStatus(null);
+      }, 5000);
     } catch (err) {
       console.error('Error posting comment:', err);
       setError('Failed to post comment');
@@ -101,7 +108,6 @@ const CommunityPage = () => {
       <div className="p-4">
         <div className='flex justify-center items-center'>
         <p className="text-[#4a6fa5] text-xl font-bold mb-2">Message from our star performers</p>
-
         </div>
         
         <div className="flex gap-3 mb-6">
@@ -112,9 +118,6 @@ const CommunityPage = () => {
                 performer.color === 'pink' ? 'bg-[#fdd6d6]' : 'bg-[#fef0cc]'
               } rounded-3xl flex-1`}
             >
-              {/* <div className={`${
-                performer.color === 'pink' ? 'text-pink-600' : 'text-yellow-600'
-              } text-6xl mb-2 px-3 py-1`}>"</div> */}
               <div className='p-3'>
               <p className="text-[#055392] text-sm">
                 {performer.quote}
@@ -130,15 +133,15 @@ const CommunityPage = () => {
                   className="w-6 h-6 rounded-full mr-2"
                 />
                 <div>
-          <p className={`text-xs font-bold ${
-            performer.color === 'pink' ? 'text-white' : 'text-[#8d7337]'
-          }`}>
-            {performer.name}
-          </p>
-          <p className={`text-xs font-bold ${
-            performer.color === 'pink' ? 'text-white' : 'text-[#8d7337]'
-          }`}>{performer.role}</p>
-        </div>
+                  <p className={`text-xs font-bold ${
+                    performer.color === 'pink' ? 'text-white' : 'text-[#8d7337]'
+                  }`}>
+                    {performer.name}
+                  </p>
+                  <p className={`text-xs font-bold ${
+                    performer.color === 'pink' ? 'text-white' : 'text-[#8d7337]'
+                  }`}>{performer.role}</p>
+                </div>
               </div>
             </div>
           ))}
@@ -159,47 +162,60 @@ const CommunityPage = () => {
             />
           </div>
           
-          {/* Submit button */}
-          <div className="flex justify-end mb-4">
-            <button 
-              onClick={handleSubmit}
-              disabled={!message.trim() || isSubmitting}
-              className="bg-[#69b0ee] text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-              ) : (
-                'Submit'
-              )}
-            </button>
+          {/* Submit button and status message */}
+          <div className="mb-4">
+            {submissionStatus && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mb-2">
+                {submissionStatus}
+              </div>
+            )}
+            <div className="flex justify-end">
+              <button 
+                onClick={handleSubmit}
+                disabled={!message.trim() || isSubmitting}
+                className="bg-[#69b0ee] text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                ) : (
+                  'Submit'
+                )}
+              </button>
+            </div>
           </div>
           
           {/* Comments from backend */}
           <div className="space-y-3">
-            {comments.map(comment => (
-              <div key={comment.id} className="bg-white rounded-lg p-3">
-                <p className="text-[#4a6fa5] pb-2 text-lg italic border-b-2 border-[#fef0cc]">
-                  {comment.content}
-                </p>
-                <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center">
-                    <img 
-                      src={comment.user?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop"}
-                      alt={comment.user?.full_name || 'User'} 
-                      className="w-6 h-6 rounded-full mr-2"
-                    />
-                    <p className="text-md text-[#4a6fa5] font-bold">{comment.user?.full_name || 'Anonymous'}</p>
-                  </div>
-                  <p className="text-xs text-[#4a6fa5]">
-                    {new Date(comment.created_at).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true
-                    })}
+            {comments.length > 0 ? (
+              comments.map(comment => (
+                <div key={comment.id} className="bg-white rounded-lg p-3">
+                  <p className="text-[#4a6fa5] pb-2 text-lg italic border-b-2 border-[#fef0cc]">
+                    {comment.content}
                   </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center">
+                      <img 
+                        src={comment.user?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop"}
+                        alt={comment.user?.full_name || 'User'} 
+                        className="w-6 h-6 rounded-full mr-2"
+                      />
+                      <p className="text-md text-[#4a6fa5] font-bold">{comment.user?.full_name || 'Anonymous'}</p>
+                    </div>
+                    <p className="text-xs text-[#4a6fa5]">
+                      {new Date(comment.created_at).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </p>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="bg-white rounded-lg p-3 text-center">
+                <p className="text-[#4a6fa5]">No approved comments yet. Be the first to share your thoughts!</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

@@ -13,6 +13,8 @@ import ChildDetail from './pages/ChildDetail';
 import { AuthProvider } from './lib/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import RankDetailPage from './pages/Rank';
+import ModulePlayer from './pages/Module';
+import ModuleDetailPage from './pages/ModuleDetail';
 
 function App() {
   return (
@@ -37,6 +39,8 @@ function App() {
             <Route path="children/:id" element={<ChildDetail />} />
             <Route path="*" element={<Navigate to="/" replace />} />
             <Route path="/rank-details" element={<RankDetailPage />} />
+            <Route path="/module/:moduleId" element={<ProtectedRoute><ModulePlayer /></ProtectedRoute>} />
+            {/* <Route path="/module/:moduleId" element={<ProtectedRoute><ModulePlayer /></ProtectedRoute>} /> */}
           </Route>
         </Routes>
       </BrowserRouter>

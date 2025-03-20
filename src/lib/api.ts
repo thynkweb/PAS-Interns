@@ -38,19 +38,27 @@ export interface TrainingModule {
   id: string;
   number: number;
   title: string;
-  description: string | null;
   video_url: string | null;
-  created_at: string;
+  description?: string;
+  is_locked?: boolean;
+  progress_percentage?: number;
 }
 
 export interface Podcast {
   id: string;
   number: number;
   title: string;
-  description: string | null;
+  description?: string;
   audio_url: string | null;
+}
+
+export interface ModuleComment {
+  id: string;
+  comment: string;
+  user_name: string;
   created_at: string;
 }
+
 
 export interface FundraisingAmount {
   id: string;
@@ -61,16 +69,16 @@ export interface FundraisingAmount {
   updated_at: string;
 }
 
-export interface Donation {
-  id: string;
-  donor_id: string | null;
-  user_id: string;
-  amount: number;
-  created_at: string;
-  display_name: string;
-  message: string | null;
-  is_anonymous: boolean;
-}
+// export interface Donation {
+//   id: string;
+//   donor_id: string | null;
+//   user_id: string;
+//   amount: number;
+//   created_at: string;
+//   display_name: string;
+//   message: string | null;
+//   is_anonymous: boolean;
+// }
 
 export interface CommunityComment {
   id: string;
@@ -79,6 +87,7 @@ export interface CommunityComment {
   image_url?: string;
   created_at: string;
   updated_at: string;
+  approved: number; // Add the approved field
   user?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -105,6 +114,7 @@ export interface UserData {
   updated_at: string;
   deadline_date: string;
   whatsapp_number: string | null;
+  donations:number |null;
 }
 
 export interface Assignment {
@@ -152,6 +162,97 @@ export interface Child {
   description: string;
   priority: string;
   created_at: string;
+}
+export interface Donation {
+  id: string;
+  donor_id: string;
+  amount: number;
+  created_at: string;
+  display_name: string;
+  message: string;
+  is_anonymous: boolean;
+  user_id: string;
+}
+
+export interface BatchStats {
+  totalAmount: number;
+  totalDonors: number;
+  averageDonation: number;
+  topDonors: {
+    id: string;
+    name: string;
+    amount: number;
+    role: string;
+  }[];
+}
+export interface WeeklyData {
+  week: string;
+  value: number;
+}
+
+export interface WeeklyStats {
+  weeklyDonors: WeeklyData[];
+  weeklyDonations: WeeklyData[];
+}
+export interface TopDonor {
+  id: string;
+  name: string;
+  amount: number;
+  role: string;
+  email?: string;
+  avatar?: string;
+}
+
+// Add this function to your api.ts file
+export async function ensureUserExists(userId: string, email: string, fullName?: string, avatarUrl?: string): Promise<UserData | null> {
+  try {
+    // First check if user already exists
+    const { data: existingUser, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+    
+    // If user exists, return it
+    if (existingUser) return existingUser;
+    
+    // User doesn't exist, create new record
+    const currentDate = new Date();
+    const deadline = new Date(currentDate);
+    deadline.setDate(deadline.getDate() + 30); // 30 days from now
+    
+    const daysLeft = Math.ceil((deadline.getTime() - currentDate.getTime()) / (1000 * 3600 * 24));
+    const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    // Create new user object with only the fields we know exist
+    const newUser = {
+      id: userId,
+      email: email,
+      full_name: fullName || null,
+      avatar_url: avatarUrl || null,
+      days_left: daysLeft,
+      referral_code: referralCode,
+      deadline_date: deadline.toISOString(),
+      created_at: currentDate.toISOString(),
+      updated_at: currentDate.toISOString()
+    };
+    
+    // Remove any fields that might not exist in the table
+    // This is a safer approach than assuming all fields exist
+    const { data: createdUser, error: insertError } = await supabase
+      .from('users')
+      .insert(newUser)
+      .select()
+      .single();
+      
+    if (insertError) throw insertError;
+    return createdUser;
+  } catch (error) {
+    handleError(error, 'ensureUserExists');
+    return null;
+  }
 }
 
 export async function getTrainingModules(): Promise<TrainingModule[]> {
@@ -230,6 +331,216 @@ export async function getDonations(userId: string): Promise<Donation[]> {
     return [];
   }
 }
+export async function getBatchStats(): Promise<BatchStats> {
+  const { data, error } = await supabase
+    .from('donations')
+    .select('*')
+    .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+  
+  if (error) {
+    console.error('Error fetching batch donations:', error);
+    throw new Error('Failed to load batch donations');
+  }
+  
+  // Calculate batch statistics
+  const donations = data as Donation[];
+  const totalAmount = donations.reduce((sum, d) => sum + d.amount, 0);
+  console.log("batch donations",donations);
+  
+  // Count unique donors
+  const uniqueDonors = new Set(donations.map(d => d.id));
+  const totalDonors = uniqueDonors.size;
+  
+  // Calculate average donation
+  const averageDonation = totalDonors > 0 ? totalAmount / totalDonors : 0;
+  
+  // Calculate top donors
+  const donorMap = new Map();
+  
+  // Aggregate donations by donor
+  donations.forEach(donation => {
+    const donorId = donation.donor_id;
+    if (donorMap.has(donorId)) {
+      donorMap.set(donorId, {
+        ...donorMap.get(donorId),
+        amount: donorMap.get(donorId).amount + donation.amount
+      });
+    } else {
+      donorMap.set(donorId, {
+        id: donorId,
+        name: donation.display_name,
+        amount: donation.amount,
+        role: 'Social Change Leader'
+      });
+    }
+  });
+  
+  // Convert to array and sort to get top donors
+  const topDonors = Array.from(donorMap.values())
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 5);
+  
+  return {
+    totalAmount,
+    totalDonors,
+    averageDonation,
+    topDonors
+  };
+}
+export async function getWeeklyStats(userId: string): Promise<{ weeklyDonors: WeeklyData[]; weeklyDonations: WeeklyData[] }> {
+  try {
+    // Fetch user creation date
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('created_at')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !userData) {
+      console.error("Error fetching user creation date:", userError);
+      throw new Error("User not found or error fetching creation date");
+    }
+
+    const creationDate = new Date(userData.created_at);
+    const today = new Date();
+    const weeklyDonors: WeeklyData[] = [];
+    const weeklyDonations: WeeklyData[] = [];
+    const weeklyRecords: { week: string; records: Donation[] }[] = [];
+
+    console.log("User creation date:", creationDate);
+
+    for (let i = 0; i < 4; i++) {
+      const weekStart = new Date(creationDate);
+      weekStart.setDate(weekStart.getDate() + i * 7);
+
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+
+      // Ensure we do not exceed today's date
+      if (weekStart >= today) break;
+      if (weekEnd > today) weekEnd.setDate(today.getDate());
+
+      const weekNumber = i + 1;
+      console.log(`Fetching data for Week ${weekNumber}: ${weekStart.toISOString()} to ${weekEnd.toISOString()}`);
+
+      const { data: weekData, error: weekError } = await supabase
+        .from('donations')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('created_at', weekStart.toISOString())
+        .lt('created_at', weekEnd.toISOString());
+
+      if (weekError) {
+        console.error(`Error fetching week ${weekNumber} data:`, weekError);
+        continue;
+      }
+
+      console.log(`Week ${weekNumber} data count:`, weekData?.length || 0);
+
+      if (!weekData || weekData.length === 0) {
+        weeklyDonors.push({ week: `Week ${weekNumber}`, value: 0 });
+        weeklyDonations.push({ week: `Week ${weekNumber}`, value: 0 });
+        weeklyRecords.push({ week: `Week ${weekNumber}`, records: [] });
+        continue;
+      }
+
+      const donations = weekData as Donation[];
+      const uniqueDonorIds = new Set(donations.map(d => d.donor_id || d.id));
+      const totalAmount = donations.reduce((sum, d) => sum + (d.amount || 0), 0);
+
+      weeklyDonors.push({ week: `Week ${weekNumber}`, value: uniqueDonorIds.size });
+      weeklyDonations.push({ week: `Week ${weekNumber}`, value: totalAmount });
+      weeklyRecords.push({ week: `Week ${weekNumber}`, records: donations });
+    }
+
+    console.log("Weekly donors:", weeklyDonors);
+    console.log("Weekly donations:", weeklyDonations);
+    console.log("Weekly records:", weeklyRecords);
+
+    return { weeklyDonors, weeklyDonations, weeklyRecords };
+  } catch (error) {
+    console.error("Error in getWeeklyStats:", error);
+    throw error;
+  }
+}
+
+
+
+// Define interface for weekly data
+
+export async function getTopDonors(): Promise<TopDonor[]> {
+  try {
+    // Calculate date 30 days ago
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoString = thirtyDaysAgo.toISOString();
+    
+    // Fetch donations from the last 30 days
+    const { data, error } = await supabase
+      .from('donations')
+      .select('*')
+      .gte('created_at', thirtyDaysAgoString);
+    
+    if (error) {
+      console.error('Error fetching donations:', error);
+      throw new Error('Failed to load donations');
+    }
+    
+    // Cast data to Donation type
+    const donations = data as Donation[];
+    console.log(`Fetched ${donations.length} donations from the last 30 days`);
+    
+    // Aggregate donations by donor
+    const donorMap = new Map<string, TopDonor>();
+    
+    donations.forEach(donation => {
+      const donorId = donation.id;
+      
+      if (donorMap.has(donorId)) {
+        // Update existing donor with additional amount
+        const existingDonor = donorMap.get(donorId)!;
+        donorMap.set(donorId, {
+          ...existingDonor,
+          amount: existingDonor.amount + donation.amount
+        });
+      } else {
+        // Add new donor to the map
+        donorMap.set(donorId, {
+          id: donorId,
+          name: donation.display_name,
+          amount: donation.amount,
+          role: determineRole(donation.amount), // Dynamically determine role based on amount
+          email: donation.email || '', // Include email if available
+          avatar: donation?.avatar_url || '' // Include avatar if available
+        });
+      }
+    });
+    
+    // Convert to array and sort to get top donors by amount
+    const topDonors = Array.from(donorMap.values())
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+    
+    if (topDonors.length === 0) {
+      console.warn('No donors found in the last 30 days');
+    } else if (topDonors.length < 5) {
+      console.warn(`Only found ${topDonors.length} donors in the last 30 days`);
+    }
+    
+    return topDonors;
+  } catch (error) {
+    console.error('Error in getTopDonors:', error);
+    throw error;
+  }
+}
+function determineRole(amount: number): string {
+  if (amount >= 10000) return 'Platinum Supporter';
+  if (amount >= 5000) return 'Gold Supporter';
+  if (amount >= 1000) return 'Silver Supporter';
+  if (amount >= 500) return 'Bronze Supporter';
+  return 'Social Change Leader';
+}
+// Define the TopDonor type
 
 export async function getComments(): Promise<CommunityComment[]> {
   try {
@@ -239,6 +550,7 @@ export async function getComments(): Promise<CommunityComment[]> {
         *,
         user:users(full_name, avatar_url)
       `)
+      .eq('approved', 1) // Only fetch approved comments
       .order('created_at', { ascending: false });
 
     if (commentsError) throw commentsError;
@@ -249,7 +561,6 @@ export async function getComments(): Promise<CommunityComment[]> {
         const { data: reactions, error: reactionsError } = await supabase
           .from('comment_reactions')
           .select('*')
-          .eq('comment_id', comment.id);
 
         if (reactionsError) throw reactionsError;
 
@@ -264,6 +575,40 @@ export async function getComments(): Promise<CommunityComment[]> {
   } catch (error) {
     handleError(error, 'getComments');
     return [];
+  }
+}
+
+export async function createComment(
+  content: string,
+  image_url?: string
+): Promise<CommunityComment> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    // Option 1: If you want to use UUID for the id
+    const id = crypto.randomUUID(); // Generate a UUID for the id
+
+    const { data, error } = await supabase
+      .from('community_comments')
+      .insert({
+        id, // Include the generated id
+        user_id: user.id,
+        content,
+        image_url,
+        approved: 0 // Set default approval status to 0 (not approved)
+      })
+      .select(`
+        *,
+        user:users(full_name, avatar_url)
+      `)
+      .single();
+
+    if (error) throw error;
+    return { ...data, reactions: [] };
+  } catch (error) {
+    handleError(error, 'createComment');
+    throw error;
   }
 }
 
@@ -397,27 +742,7 @@ export async function updateUserProgress(
   }
 }
 
-export async function getTopDonors(): Promise<UserRank[]> {
-  try {
-    const { data, error } = await supabase
-      .from('user_ranks')
-      .select(`
-        *,
-        user:users(
-          full_name,
-          avatar_url
-        )
-      `)
-      .order('rank_position')
-      .limit(5);
 
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    handleError(error, 'getTopDonors');
-    return [];
-  }
-}
 
 export async function getUserRank(userId: string): Promise<UserRank | null> {
   try {
@@ -466,34 +791,34 @@ export async function getUserDonationHistory(userId: string) {
   }
 }
 
-export async function createComment(
-  content: string,
-  image_url?: string
-): Promise<CommunityComment> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+// export async function createComment(
+//   content: string,
+//   image_url?: string
+// ): Promise<CommunityComment> {
+//   try {
+//     const { data: { user } } = await supabase.auth.getUser();
+//     if (!user) throw new Error('User not authenticated');
 
-    const { data, error } = await supabase
-      .from('community_comments')
-      .insert({
-        user_id: user.id,
-        content,
-        image_url
-      })
-      .select(`
-        *,
-        user:users(full_name, avatar_url)
-      `)
-      .single();
+//     const { data, error } = await supabase
+//       .from('community_comments')
+//       .insert({
+//         user_id: user.id,
+//         content,
+//         image_url
+//       })
+//       .select(`
+//         *,
+//         user:users(full_name, avatar_url)
+//       `)
+//       .single();
 
-    if (error) throw error;
-    return { ...data, reactions: [] };
-  } catch (error) {
-    handleError(error, 'createComment');
-    throw error;
-  }
-}
+//     if (error) throw error;
+//     return { ...data, reactions: [] };
+//   } catch (error) {
+//     handleError(error, 'createComment');
+//     throw error;
+//   }
+// }
 
 export async function updateComment(
   id: string,
@@ -596,5 +921,182 @@ export async function getChildById(childId: string): Promise<Child | null> {
   } catch (error) {
     handleError(error, 'getChildById');
     return null;
+  }
+}
+export async function getTrainingModulesWithStatus() {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  
+  const { data, error } = await supabase.rpc('get_modules_with_status', { 
+    user_id: user.id 
+  });
+  
+  if (error) {
+    console.error('Error fetching modules:', error);
+    throw error;
+  }
+  
+  return data as TrainingModule[];
+}
+
+// Get a single module by ID
+export async function getModuleById(moduleId: string) {
+  const { data, error } = await supabase
+    .from('training_modules')
+    .select('*')
+    .eq('id', moduleId)
+    .single();
+    
+  if (error) {
+    console.error('Error fetching module:', error);
+    throw error;
+  }
+  
+  return data as TrainingModule;
+}
+
+// Get user progress for a module
+export async function getModuleProgress(moduleId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  
+  const { data, error } = await supabase
+    .from('user_progress')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('module_id', moduleId)
+    .single();
+    
+  if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" - user hasn't started this module
+    console.error('Error fetching progress:', error);
+    throw error;
+  }
+  
+  return data;
+}
+
+// Update module progress
+export async function updateModuleProgress(moduleId: string, progressPercentage: number, position: number, completed: boolean) {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  
+  const { error } = await supabase
+    .from('user_progress')
+    .upsert({
+      user_id: user.id,
+      module_id: moduleId,
+      progress_percentage: progressPercentage,
+      last_watched_position: position,
+      completed: completed,
+      completed_at: completed ? new Date().toISOString() : null
+    }, { onConflict: 'user_id,module_id' });
+    
+  if (error) {
+    console.error('Error updating progress:', error);
+    throw error;
+  }
+  
+  // If completed, try to unlock next module
+  if (completed) {
+    await unlockNextModule(moduleId);
+  }
+}
+
+// Unlock next module when current is completed
+export async function unlockNextModule(currentModuleId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  
+  try {
+    // Get current module order
+    const { data: currentModule } = await supabase
+      .from('training_modules')
+      .select('order')
+      .eq('id', currentModuleId)
+      .single();
+    
+    if (!currentModule) return;
+    
+    // Get next module in sequence
+    const { data: nextModule } = await supabase
+      .from('training_modules')
+      .select('id')
+      .eq('order', currentModule.order + 1)
+      .single();
+    
+    if (!nextModule) return; // No next module
+    
+    // Unlock next module
+    await supabase
+      .from('user_progress')
+      .upsert({
+        user_id: user.id,
+        module_id: nextModule.id,
+        progress_percentage: 0,
+        completed: false,
+        is_locked: false
+      }, { onConflict: 'user_id,module_id' });
+  } catch (err) {
+    console.error('Error unlocking next module:', err);
+  }
+}
+
+// Get comments for a module
+export async function getModuleComments(moduleId: string) {
+  const { data, error } = await supabase
+    .from('module_comments')
+    .select('id, comment, created_at, user_name')
+    .eq('module_id', moduleId)
+    .order('created_at', { ascending: false });
+    
+  if (error) {
+    console.error('Error fetching comments:', error);
+    throw error;
+  }
+  
+  return data as ModuleComment[];
+}
+
+// Add a comment to a module
+export async function addModuleComment(moduleId: string, comment: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  
+  // Get user profile for name
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single();
+    
+  const userName = profile?.full_name || 'Anonymous';
+  
+  const { error } = await supabase
+    .from('module_comments')
+    .insert({
+      module_id: moduleId,
+      user_id: user.id,
+      comment: comment,
+      user_name: userName
+    });
+    
+  if (error) {
+    console.error('Error adding comment:', error);
+    throw error;
   }
 }

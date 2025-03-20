@@ -10,68 +10,77 @@ const RankDetailPage = () => {
   const { user } = useAuth();
   const [currentAmount, setCurrentAmount] = useState(0);
   const [loading, setLoading] = useState(true);
-  
+  const [expandedRank, setExpandedRank] = useState(null);
   // Define all ranks
   const allRanks = [
     {
       id: 0,
       title: "Aspiring Change Maker",
-      level: "Level 0",
-      range: "Rs. 0 - Rs. 1000",
+      level: "LEVEL 1 (0/5k)",
+      range: "Rs. 0 - Rs. 5000",
       icon: "🏔️",
       minAmount: 0,
-      maxAmount: 1000
+      maxAmount: 5000,
+      perks: ["Recognition badge", "Newsletter feature", "Exclusive updates"]
     },
     {
       id: 1,
       title: "Emerging Advocate",
-      level: "Level 1",
-      range: "Rs. 1000 - Rs. 5000",
+      level: "LEVEL 2 (5k/10k)",
+      range: "Rs. 5000 - Rs. 10000",
       icon: "🌱",
-      minAmount: 1000,
-      maxAmount: 5000
+      minAmount: 5000,
+      maxAmount: 10000,
+      perks: ["Priority access to events", "Special community forum", "Early access to impact reports"]
     },
     {
       id: 2,
       title: "Impact Builder",
-      level: "Level 2",
-      range: "Rs. 5000 - Rs. 10000",
+      level: "LEVEL 3 (10k/20k)",
+      range: "Rs. 10000 - Rs. 20000",
       icon: "🌿",
-      minAmount: 5000,
-      maxAmount: 10000
+      minAmount: 10000,
+      maxAmount: 20000,
+      perks: ["Feature in annual report", "Mentorship opportunities", "Exclusive donor gifts"]
     },
     {
       id: 3,
       title: "Social Change Leader",
-      level: "Level 3",
-      range: "Rs. 10000 - Rs. 25000",
+      level: "LEVEL 4 (20k+)",
+      range: "Rs. 20000 - Rs. 50000",
       icon: "🌳",
-      minAmount: 10000,
-      maxAmount: 25000
+      minAmount: 20000,
+      maxAmount: 50000,
+      perks: ["VIP event invitations", "Networking with top changemakers", "Lifetime impact recognition"]
+    },
+    {
+      id: 4,
+      title: "Top Contributor",
+      level: "LEVEL 5 (50k+)",
+      range: "Rs. 50000+",
+      icon: "🏆",
+      minAmount: 50000,
+      maxAmount: Infinity,
+      perks: ["Exclusive leadership meetings", "Personalized impact report", "Special honorary title"]
     }
   ];
 
   // Get current rank based on amount
-  const getCurrentRank = (amount) => {
+  const getCurrentRank = (amount:any) => {
     for (let i = allRanks.length - 1; i >= 0; i--) {
       if (amount >= allRanks[i].minAmount) {
-        const rank = {...allRanks[i]};
-        
-        // Mark as current and set progress
+        const rank = { ...allRanks[i] };
         rank.current = true;
         rank.amount = amount;
-        
-        // Calculate next milestone
         if (i < allRanks.length - 1 && amount < allRanks[i].maxAmount) {
           rank.nextMilestone = allRanks[i].maxAmount;
         } else if (i === allRanks.length - 1) {
           rank.nextMilestone = rank.maxAmount;
         }
-        
         return rank;
       }
     }
-    return allRanks[0]; // Default to first rank
+    return allRanks[0];
   };
 
   useEffect(() => {
@@ -113,16 +122,17 @@ const RankDetailPage = () => {
 
     fetchData();
   }, [user, location]);
-
-  // Current rank based on amount
   const currentRank = getCurrentRank(currentAmount);
-  
-  // Fixed display range for the gauge (0 to 25000)
   const displayMinAmount = 0;
-  const displayMaxAmount = 100000;
-  
-  // Calculate progress percentage for the gauge
+  const displayMaxAmount = 150000;
   const progressPercentage = Math.min(100, (currentAmount / displayMaxAmount) * 100);
+
+  const toggleRank = (id:any) => {
+    setExpandedRank(expandedRank === id ? null : id);
+  };
+  console.log("current",allRanks);
+  
+  // Current rank based on amount
 
   // Update rank completion status
   const ranksWithStatus = allRanks.map(rank => ({
@@ -133,14 +143,14 @@ const RankDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-blue-400 flex items-center justify-center">
+      <div className="min-h-screen bg-[#69b0ee] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-blue-400 min-h-screen">
+    <div className="bg-[#69b0ee] min-h-screen">
       {/* Header */}
       <div className="p-6 text-white">
         <div className="flex items-center">
@@ -213,9 +223,9 @@ const RankDetailPage = () => {
             </div>
             
             {/* Level - Positioned perfectly */}
-            <div className="absolute bottom-0 left-0 right-0 text-center">
+            {/* <div className="absolute bottom-0 left-0 right-0 text-center">
               <div className="text-sm font-medium text-white/80">LEVEL {currentRank.level.split(' ')[1]}</div>
-            </div>
+            </div> */}
           </div>
         </div>
         
@@ -227,36 +237,37 @@ const RankDetailPage = () => {
       </div>
       
       {/* Rewards Section */}
-      <div className="bg-white rounded-t-3xl mt-4 p-6 flex-1">
-        <h3 className="text-2xl font-bold text-blue-600 mb-4">Rewards</h3>
-        
-        {/* Ranks List */}
+      <div className="bg-white rounded-3xl mt-4 mx-4 p-6 flex-1">
+        <div className='flex justify-center items-center'>
+          <h3 className="text-2xl font-bold text-[#4a6fa5] mb-4">Rewards</h3>
+        </div>
         <div className="space-y-4">
-          {ranksWithStatus.map((rank) => (
+          {allRanks.map((rank) => (
             <div 
-              key={rank.id}
-              className={`rounded-lg p-4 flex items-center justify-between ${
-                rank.current ? 'bg-yellow-300' : 'bg-blue-100'
-              }`}
-            >
-              <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3">
-                  <span className="text-lg">{rank.icon}</span>
+            key={rank.id} 
+            className={`rounded-2xl p-4 transition-all duration-300 ${
+              rank.current ? 'bg-[#fed166] text-[#4a6fa5]' : 'bg-[#69b0ee] text-white'
+            }`}
+          >
+              <div className="flex items-center justify-between" onClick={() => toggleRank(rank.id)}>
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3">
+                    <span className="text-lg">{rank.icon}</span>
+                  </div>
+                  <div>
+                    <h4 className={`font-bold ${rank.current ? 'text-[#69b0ee]' : 'text-white'}`}>{rank.title}</h4>
+                    <p className={`text-sm ${rank.current ? 'text-[#69b0ee]' : 'text-white'}`}>{rank.level} ({rank.range})</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-blue-600">{rank.title}</h4>
-                  <p className="text-sm text-gray-600">{rank.level} ({rank.range})</p>
-                </div>
+                {expandedRank === rank.id ? <ChevronUp size={24} className="text-blue-600" /> : <ChevronDown size={24} className="text-blue-300" />}
               </div>
-              <div>
-                {rank.completed ? (
-                  <CheckCircle size={24} className="text-blue-500" />
-                ) : rank.current ? (
-                  <ChevronUp size={24} className="text-blue-600" />
-                ) : (
-                  <ChevronDown size={24} className="text-blue-300" />
-                )}
-              </div>
+              {expandedRank === rank.id && (
+                <ul className="mt-3 text-white text-sm list-disc pl-6">
+                  {rank.perks.map((perk, index) => (
+                    <li key={index}>{perk}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </div>
