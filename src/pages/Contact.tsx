@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import contactHeader from '../../public/assets/Screenshot 2025-03-18 at 1.25.59 PM.png'
 
 export default function ContactManagement() {
   const [contacts, setContacts] = useState([]);
@@ -125,7 +126,7 @@ export default function ContactManagement() {
       <div className="p-4 text-[#4a6fa5]">
         <div className="bg-[#daeeff] flex items-center justify-between p-3 rounded-xl">
           <div className="w-1/4">
-            <img src="public/assets/Screenshot 2025-03-18 at 1.25.59 PM.png" alt="IMG" className="h-12" />
+            <img src={contactHeader} alt="IMG" className="h-12" />
           </div>
           <div className="w-auto">
             <p className="text-xs">
