@@ -13,6 +13,9 @@ import {
   Child,
 } from "../lib/api";
 import LoginButton from "../components/LoginButton";
+import needleImage from '../../public/assets/needle.svg'
+import pencilImage from '../../public/assets/pencil.png'
+import pencilImage2 from '../../public/assets/pencil_border.svg'
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -228,7 +231,7 @@ console.log("Rank Level:", rankLevel);
               <div
                 className="absolute inset-0"
                 style={{
-                  backgroundImage: "url('/dist/assets/pencil_border.svg')",
+                  backgroundImage: `url(${pencilImage2})`,
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "contain",
                   backgroundPosition: "center",
@@ -242,7 +245,7 @@ console.log("Rank Level:", rankLevel);
                 style={{
                   transform: `rotate(${progress - 90}deg)`, // Rotate left by 90 degrees
                   display: progress > 0 ? "block" : "none",
-                  backgroundImage: "url('/dist/assets/needle.svg')",
+                  backgroundImage: `url(${needleImage})`,
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "contain",
                   backgroundPosition: "center",

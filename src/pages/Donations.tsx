@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom';
 import { getDonations, getBatchStats, getWeeklyStats, Donation, BatchStats, WeeklyStats, TopDonor, getTopDonors } from '../lib/api';
 import { useAuth } from '../lib/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-
+import needleImage from '../../public/assets/needle.svg'
+import pencilImage from '../../public/assets/pencil.png'
+import pencilImage2 from '../../public/assets/pencil_border.svg'
 export default function Donations() {
   const { user } = useAuth();
   const [donations, setDonations] = useState<Donation[]>([]);
@@ -166,7 +168,7 @@ export default function Donations() {
               <div
                 className="absolute inset-0"
                 style={{
-                  backgroundImage: "url('/dist/assets/pencil_border.svg')",
+                  backgroundImage: `url(${pencilImage2})`,
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "contain",
                   backgroundPosition: "center",
@@ -180,7 +182,7 @@ export default function Donations() {
                 style={{
                   transform: `rotate(${progress - 90}deg)`, // Rotate left by 90 degrees
                   display: progress > 0 ? 'block' : 'none',
-                  backgroundImage: "url('/dist/assets/needle.svg')",
+                  backgroundImage:`url(${needleImage})`,
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "contain",
                   backgroundPosition: "center",

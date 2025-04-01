@@ -67,7 +67,7 @@ export default function Children() {
         <div className=" rounded-xl p-4 mb-6 border-0 shadow-[1px_10px_15px_7px_rgba(0,0,0,0.07)]">
           <div className="flex items-center gap-4">
             <img
-              src="src/assets/teaching.svg"
+              src="public/assets/teaching.svg"
               alt="Children"
               className="w-20 h-20 object-cover rounded-lg"
             />
