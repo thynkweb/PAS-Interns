@@ -12,6 +12,7 @@ export interface Database {
           created_at: string;
           updated_at: string;
           deadline_date: string;
+          whatsapp_number: string | null;
         };
         Insert: {
           id: string;
@@ -23,6 +24,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           deadline_date?: string;
+          whatsapp_number?: string | null;
         };
         Update: {
           id?: string;
@@ -34,6 +36,39 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           deadline_date?: string;
+          whatsapp_number?: string | null;
+        };
+      };
+      children: {
+        Row: {
+          id: string;
+          name: string;
+          age: number;
+          location: string;
+          image_url: string;
+          description: string | null;
+          priority: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          age: number;
+          location: string;
+          image_url: string;
+          description?: string | null;
+          priority?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          age?: number;
+          location?: string;
+          image_url?: string;
+          description?: string | null;
+          priority?: string;
+          created_at?: string;
         };
       };
       donations: {
@@ -46,26 +81,6 @@ export interface Database {
           message: string | null;
           is_anonymous: boolean;
           created_at: string;
-        };
-        Insert: {
-          id?: string;
-          donor_id?: string | null;
-          user_id: string;
-          amount: number;
-          display_name: string;
-          message?: string | null;
-          is_anonymous?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          donor_id?: string | null;
-          user_id?: string;
-          amount?: number;
-          display_name?: string;
-          message?: string | null;
-          is_anonymous?: boolean;
-          created_at?: string;
         };
       };
       user_ranks: {

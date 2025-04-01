@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import { ensureUserExists } from './api'; // Import the new function
 
 interface AuthContextType {
   user: User | null;
@@ -37,13 +38,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      console.log("user in auth",currentUser );
+      
+      // If we have a user, ensure they exist in our custom table
+      if (currentUser?.id && currentUser?.email) {
+        ensureUserExists(currentUser.id, currentUser.email,currentUser.user_metadata.full_name, currentUser.user_metadata.avatar_url);
+      }
+      
       setLoading(false);
     });
 
     // Listen for changes on auth state
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      
+      // If we have a user, ensure they exist in our custom table
+      if (currentUser?.id && currentUser?.email) {
+        ensureUserExists(currentUser.id, currentUser.email,currentUser.user_metadata.full_name, currentUser.user_metadata.avatar_url);
+      }
+      
       setLoading(false);
     });
 

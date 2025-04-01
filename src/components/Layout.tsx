@@ -120,7 +120,7 @@ export default function Layout() {
             </Link>
             <Link to="/insights" className={`flex flex-col items-center ${location.pathname === '/insights' ? 'text-red-500' : 'text-gray-600'}`}>
               <PieChart size={24} />
-              <span className="text-xs mt-1">Insights</span>
+              <span className="text-xs mt-1">Contacts</span>
             </Link>
             <Link to="/donations" className={`flex flex-col items-center ${location.pathname === '/donations' ? 'text-red-500' : 'text-gray-600'}`}>
               <Heart size={24} />
