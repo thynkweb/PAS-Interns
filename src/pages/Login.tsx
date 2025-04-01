@@ -3,6 +3,9 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import LoginButton from '../components/LoginButton';
 import { ArrowLeft } from 'lucide-react';
+import pledgeLogo from '../../public/assets/pledgeLogo.webp'
+import splashBG from '../../public/assets/splashBG.svg'
+import teachingLogo from '../../public/assets/teaching.svg'
 
 type OnboardingStep = 'splash' | 'intro' | 'login' | 'loading' | 'name' | 'whatsapp' | 'avatar';
 
@@ -71,10 +74,10 @@ export default function Login() {
     switch (step) {
       case 'splash':
         return (
-          <div className={`${containerClass} flex flex-col items-center justify-center`} style={{backgroundImage:"url('src/assets/splashBG.svg')"}}>
+          <div className={`${containerClass} flex flex-col items-center justify-center`} style={{backgroundImage:`url(${splashBG})`}}>
             <div className="w-96 h-auto mb-12">
               <img 
-                src="src/assets/pledgeLogo.webp"
+                src={pledgeLogo}
                 alt="Logo"
                 className="w-full h-full "
               />
@@ -86,9 +89,9 @@ export default function Login() {
         );
       case 'intro':
         return (
-          <div className={`${containerClass} flex flex-col items-center justify-center p-6`} style={{backgroundImage:"url('src/assets/splashBG.svg')"}}>
+          <div className={`${containerClass} flex flex-col items-center justify-center p-6`} style={{backgroundImage:`url(${splashBG})`}}>
             <img 
-              src="src/assets/teaching.svg"
+              src={teachingLogo}
               alt="Onboarding"
               className="w-96 h-auto object-cover rounded-2xl mb-8"
             />
@@ -107,10 +110,10 @@ export default function Login() {
 
       case 'login':
         return (
-          <div className={`${containerClass} flex flex-col items-center justify-center p-6`} style={{backgroundImage:"url('src/assets/splashBG.svg')"}}>
+          <div className={`${containerClass} flex flex-col items-center justify-center p-6`} style={{backgroundImage:`url(${splashBG})`}}>
             <div className="w-96 h-auto mb-12">
               <img 
-                src="src/assets/pledgeLogo.webp"
+                src={pledgeLogo}
                 alt="Logo"
                 className="w-full h-full object-cover rounded-full"
               />
@@ -125,10 +128,10 @@ export default function Login() {
         );
       case 'loading':
         return (
-          <div className={`${containerClass} flex flex-col items-center justify-center p-6`} style={{backgroundImage:"url('src/assets/splashBG.svg')"}}>
+          <div className={`${containerClass} flex flex-col items-center justify-center p-6`} style={{backgroundImage:`url(${splashBG})`}}>
             <div className="w-96 h-auto mb-12">
               <img 
-                src="src/assets/pledgeLogo.webp"
+                src={pledgeLogo}
                 alt="Logo"
                 className="w-full h-full object-cover rounded-full"
               />
@@ -144,7 +147,7 @@ export default function Login() {
         );
       case 'name':
         return (
-          <div className={`${containerClass} flex flex-col p-6`} style={{backgroundImage:"url('src/assets/splashBG.svg')"}}>
+          <div className={`${containerClass} flex flex-col p-6`} style={{backgroundImage:`url(${splashBG})`}}>
             <button 
               onClick={() => setStep('login')}
               className="p-2 -ml-2 text-gray-600 hover:text-gray-900"
