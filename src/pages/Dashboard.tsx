@@ -13,8 +13,7 @@ import {
   Child,
 } from "../lib/api";
 import LoginButton from "../components/LoginButton";
-import needleImage from '../../public/assets/needle.svg'
-import pencilImage from '../../public/assets/pencil.png'
+import needleImage from '/public/assets/needle.svg'
 import pencilImage2 from '../../public/assets/pencil_border.svg'
 
 export default function Dashboard() {
