@@ -13,7 +13,7 @@ import {
   Child,
 } from "../lib/api";
 import LoginButton from "../components/LoginButton";
-import needleImage from '../../public/assets/needle.svg'
+import needleImage1 from '/public/assets/needle.svg'
 import pencilImage2 from '../../public/assets/pencil_border.svg'
 
 export default function Dashboard() {
@@ -244,7 +244,7 @@ console.log("Rank Level:", rankLevel);
                 style={{
                   transform: `rotate(${progress - 90}deg)`, // Rotate left by 90 degrees
                   display: progress > 0 ? "block" : "none",
-                  backgroundImage: `url(${needleImage})`,
+                  backgroundImage: `url(${needleImage1})`,
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "contain",
                   backgroundPosition: "center",

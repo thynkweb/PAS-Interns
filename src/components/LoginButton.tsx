@@ -1,25 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../lib/AuthContext';
+import { useNavigate } from 'react-router-dom'; // Import if using React Router
 
 interface LoginButtonProps {
   onSuccess?: () => void;
+  redirectPath?: string; // Where to redirect after successful login
 }
 
-export default function LoginButton({ onSuccess }: LoginButtonProps) {
-  const { signInWithGoogle } = useAuth();
+export default function LoginButton({ onSuccess, redirectPath = '/' }: LoginButtonProps) {
+  const { signInWithGoogle, user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate(); // If using React Router
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    if (user && !authLoading) {
+      console.log("User already logged in, redirecting...");
+      onSuccess?.();
+      if (redirectPath) navigate(redirectPath);
+    }
+  }, [user, authLoading, onSuccess, navigate, redirectPath]);
 
   const handleSignIn = async () => {
     try {
       setLoading(true);
       setError(null);
+      console.log("Initiating sign in with Google");
       await signInWithGoogle();
-      onSuccess?.();
+      
+      // No need to call onSuccess or navigate here
+      // The redirect will happen automatically and AuthContext will handle the return
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sign in. Please try again.');
       console.error('Sign in error:', err);
-    } finally {
+      setError(err instanceof Error ? err.message : 'Failed to sign in. Please try again.');
       setLoading(false);
     }
   };
@@ -28,12 +42,12 @@ export default function LoginButton({ onSuccess }: LoginButtonProps) {
     <div className="w-full flex flex-col items-center">
       <button
         onClick={handleSignIn}
-        disabled={loading}
+        disabled={loading || authLoading}
         className={`w-full flex items-center justify-center gap-2 bg-white text-gray-700 rounded-full px-6 py-3 hover:bg-gray-50 transition-colors border border-gray-200 ${
-          loading ? 'opacity-70 cursor-not-allowed' : ''
+          (loading || authLoading) ? 'opacity-70 cursor-not-allowed' : ''
         }`}
       >
-        {loading ? (
+        {(loading || authLoading) ? (
           <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin"></div>
         ) : (
           <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -56,7 +70,7 @@ export default function LoginButton({ onSuccess }: LoginButtonProps) {
           </svg>
         )}
         <span className="font-medium">
-          {loading ? 'Signing in...' : 'Sign in with Google'}
+          {(loading || authLoading) ? 'Signing in...' : 'Sign in with Google'}
         </span>
       </button>
       {error && (

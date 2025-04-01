@@ -32,12 +32,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isDevelopment = import.meta.env.DEV;
     return isDevelopment 
       ? 'http://localhost:5173/'
-      : 'https://stellar-rabanadas-b234c4.netlify.app/';
+      : 'https://pasinterns.vercel.app/';
   };
 
   useEffect(() => {
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("session",session);
+      
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       console.log("user in auth",currentUser );
@@ -107,14 +109,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      signInWithGoogle, 
-      signOut, 
-      loading,
-      isOnboarding,
-      setIsOnboarding 
-    }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        signInWithGoogle, 
+        signOut, 
+        loading, 
+        isOnboarding, 
+        setIsOnboarding 
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
