@@ -69,8 +69,8 @@ export default function Donations() {
   // Get user's donors (people who donated to the current user)
   const userDonors = userDonations.map(d => ({
     id: d.donor_id,
-    name: d.display_name,
-    role: 'Social Change Leader',
+    name: d.name,
+    role:`₹${d.amount}`,
     amount: d.amount
   }));
   

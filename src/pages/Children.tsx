@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { getChildren, Child } from "../lib/api";
@@ -9,6 +9,8 @@ export default function Children() {
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
 
   useEffect(() => {
     async function fetchChildren() {
@@ -87,7 +89,10 @@ export default function Children() {
           {children.map((child) => (
             <div
               key={child.id}
-              onClick={() => navigate(`/children/${child.id}`)}
+              onClick={() => {
+                setSelectedChild(child); // Set the selected child
+                setShowModal(true); // Open the modal
+              }}
               className="bg-amber-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow shadow-[1px_10px_15px_10px_rgba(0,0,0,0.07)]"
             >
               <div
@@ -137,6 +142,62 @@ export default function Children() {
           ))}
         </div>
       </div>
+      {showModal && selectedChild && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md relative">
+            {/* Close Button (X) */}
+            <button
+              onClick={() => {
+                setShowModal(false);
+                setSelectedChild(null); // Reset selected child
+              }}
+              className="absolute top-2 right-2"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Modal Content */}
+            <div className="flex items-center gap-4">
+              <img
+                src={selectedChild.image_url}
+                alt={selectedChild.name}
+                className="w-20 h-20 rounded-full object-cover"
+              />
+              <div>
+                <h2 className="text-xl font-bold text-indigo-600">
+                  {selectedChild.name}
+                </h2>
+                <p className="text-gray-500">{selectedChild.age} years</p>
+                <p className="text-gray-500">
+                  <span className="mr-1">📍</span>
+                  {selectedChild.location}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold text-gray-700">
+                Description
+              </h3>
+              <div className="mt-1 max-h-60 overflow-y-auto text-sm text-gray-600">
+                {selectedChild.description}
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setShowModal(false);
+                setSelectedChild(null); // Reset selected child
+              }}
+              className="mt-6 w-full bg-amber-500 text-white py-3 rounded-xl font-medium hover:bg-amber-600 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
+    
   );
 }

@@ -210,7 +210,7 @@ export async function ensureUserExists(userId: string, email: string, fullName?:
     const { data: existingUser, error: fetchError } = await supabase
       .from('users')
       .select('*')
-      .eq('id', userId)
+      .eq('email', email)
       .maybeSingle();
     
     if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
@@ -228,7 +228,7 @@ export async function ensureUserExists(userId: string, email: string, fullName?:
     
     // Create new user object with only the fields we know exist
     const newUser = {
-      id: userId,
+      id: userId.toString(), // Explicitly convert UUID to string
       email: email,
       full_name: fullName || null,
       avatar_url: avatarUrl || null,
@@ -236,8 +236,11 @@ export async function ensureUserExists(userId: string, email: string, fullName?:
       referral_code: referralCode,
       deadline_date: deadline.toISOString(),
       created_at: currentDate.toISOString(),
-      updated_at: currentDate.toISOString()
+      updated_at: currentDate.toISOString(),
+      social_status: 1,
+      donations: 0
     };
+    console.log("new user",newUser);
     
     // Remove any fields that might not exist in the table
     // This is a safer approach than assuming all fields exist
@@ -507,7 +510,7 @@ export async function getTopDonors(): Promise<TopDonor[]> {
         // Add new donor to the map
         donorMap.set(donorId, {
           id: donorId,
-          name: donation.display_name,
+          name: donation.name,
           amount: donation.amount,
           role: determineRole(donation.amount), // Dynamically determine role based on amount
           email: donation.email || '', // Include email if available
