@@ -427,7 +427,7 @@ export default function ModulePlayer() {
                   }`}
                 >
                   <Send size={16} />
-                  <span>Send</span>
+                  <span className="hidden md:block">Send</span>
                 </button>
               </div>
             </div>

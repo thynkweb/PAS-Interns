@@ -35,8 +35,7 @@ export default function Dashboard() {
       if (user) {
         try {
           console.log("user ID", user);
-          if(user.whatsapp_number == null){
-
+          if (user.whatsapp_number == null) {
           }
           const [fundData, uData, stats, donations, childrenData] =
             await Promise.all([
@@ -67,7 +66,6 @@ export default function Dashboard() {
           console.log("childrens", childrenData);
 
           console.log("user data", userData);
-          
         } catch (error) {
           console.error("Error fetching data:", error);
         } finally {
@@ -142,15 +140,15 @@ export default function Dashboard() {
     user?.user_metadata?.full_name ||
     user?.email?.split("@")[0] ||
     "User";
-    let amountOutOf = 30000;
-    currentAmount = userData?.donations || 0;
-    
-    // Dynamically increase amountOutOf if currentAmount exceeds it
-    while (currentAmount > amountOutOf) {
-      amountOutOf *= 2;
-    }
-    
-    const progress = Math.min((currentAmount / amountOutOf) * 180, 180);
+  let amountOutOf = 30000;
+  currentAmount = userData?.donations || 0;
+
+  // Dynamically increase amountOutOf if currentAmount exceeds it
+  while (currentAmount > amountOutOf) {
+    amountOutOf *= 2;
+  }
+
+  const progress = Math.min((currentAmount / amountOutOf) * 180, 180);
   const { title: rankTitle, level: rankLevel } = getRankDetails(
     userData?.social_status ?? 0
   );
@@ -160,34 +158,70 @@ export default function Dashboard() {
     const nextMultipleOf10 = Math.ceil((days + 1) / 10) * 10;
     return nextMultipleOf10 - days;
   };
-  
+
   const getAddedDays = (days: number) => {
     return Math.floor((days - 30) / 10 + 1) * 10;
   };
-  
-
+  const Needle = ({ rotation }) => (
+    <div
+      className="absolute inset-0 origin-bottom transition-transform duration-1000"
+      style={{
+        transform: `rotate(${rotation}deg)`,
+        display: rotation ? "block" : "none",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "contain",
+        backgroundPosition: "center",
+        width: "100%",
+        height: "90%",
+      }}
+    >
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 18 145"
+        preserveAspectRatio="xMidYMin meet"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g clipPath="url(#clip0_54_5075)">
+          <path
+            d="M8.99847 0L2.47192 135.397H15.525L8.99847 0Z"
+            fill="#EE6969"
+          />
+          <path
+            d="M8.99849 144.997C13.9682 144.997 17.997 140.699 17.997 135.397C17.997 130.096 13.9682 125.798 8.99849 125.798C4.02876 125.798 0 130.096 0 135.397C0 140.699 4.02876 144.997 8.99849 144.997Z"
+            fill="#FFD166"
+          />
+        </g>
+        <defs>
+          <clipPath id="clip0_54_5075">
+            <rect width="18" height="145" fill="white" />
+          </clipPath>
+        </defs>
+      </svg>
+    </div>
+  );
   return (
     <div className="p-4 pb-20">
       {/* Header */}
       <div className="bg-red-400 rounded-3xl p-6 text-white mb-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-          <div className="bg-white rounded-full px-3 py-2 text-gray-700 text-sm font-medium">
-  Days left{" "}
-  {typeof userData?.days_left === "number" ? (
-    <span className="text-[#4a6fa5] font-bold ml-1">
-      {getAdjustedDaysLeft(userData.days_left)}
-      {userData.days_left > 30 && (
-        <span className="text-xs text-gray-500 ml-1 align-top">
-          +{getAddedDays(userData.days_left)}
-        </span>
-      )}
-    </span>
-  ) : (
-    "Invalid"
-  )}
-</div>
-
+            <div className="bg-white rounded-full px-3 py-2 text-gray-700 text-sm font-medium">
+              Days left{" "}
+              {typeof userData?.days_left === "number" ? (
+                <span className="text-[#4a6fa5] font-bold ml-1">
+                  {getAdjustedDaysLeft(userData.days_left)}
+                  {userData.days_left > 30 && (
+                    <span className="text-xs text-gray-500 ml-1 align-top">
+                      +{getAddedDays(userData.days_left)}
+                    </span>
+                  )}
+                </span>
+              ) : (
+                "Invalid"
+              )}
+            </div>
           </div>
           {user ? (
             <div className="relative">
@@ -263,7 +297,7 @@ export default function Dashboard() {
                 }}
               ></div>
 
-              <div
+              {/* <div
                 className="absolute inset-0 origin-bottom transition-transform duration-1000"
                 style={{
                   transform: `rotate(${progress - 90}deg)`, // Rotate left by 90 degrees
@@ -275,7 +309,18 @@ export default function Dashboard() {
                   width: "100%",
                   height: "90%",
                 }}
-              ></div>
+              ></div> */}
+
+              <div
+                className="absolute inset-0 origin-bottom transition-transform duration-1000"
+                style={{
+                  display: progress > 0 ? "block" : "none",
+                  width: "100%",
+                  height: "90%",
+                }}
+              >
+                <Needle rotation={progress - 90} />
+              </div>
 
               {/* Needle/Pointer */}
               {/* <div 
@@ -286,13 +331,8 @@ export default function Dashboard() {
               </div> */}
             </div>
             <div className="flex justify-between items-center gap-36">
-              <div className="text-sm text-[#969696] ">
-              ₹0
-              </div>
-              <div className="text-sm text-[#969696] ">
-              ₹{amountOutOf}
-              </div>
-
+              <div className="text-sm text-[#969696] ">₹0</div>
+              <div className="text-sm text-[#969696] ">₹{amountOutOf}</div>
             </div>
             <div className="text-center mt-4">
               {/* <h2 className="text-lg font-medium mb-1">Amount Raised</h2> */}
@@ -300,7 +340,6 @@ export default function Dashboard() {
                 ₹{currentAmount.toLocaleString("en-IN")}
               </p>
             </div>
-            
           </div>
         </div>
 

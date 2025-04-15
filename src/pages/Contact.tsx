@@ -173,7 +173,7 @@ export default function ContactManagement() {
               </div>
               
               <div className="p-3">
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <p className="text-md align-center items-center text-[#4a6fa5] font-bold">Status :</p>
                   <button
                     onClick={() => handleStatusChange(contact?.id, 'to be called')}

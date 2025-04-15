@@ -3,6 +3,7 @@ import { ArrowLeft, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { getChildren, Child } from "../lib/api";
+import teachingImage from '../../public/assets/teaching.svg'
 
 export default function Children() {
   const navigate = useNavigate();
@@ -69,7 +70,7 @@ export default function Children() {
         <div className=" rounded-xl p-4 mb-6 border-0 shadow-[1px_10px_15px_7px_rgba(0,0,0,0.07)]">
           <div className="flex items-center gap-4">
             <img
-              src="public/assets/teaching.svg"
+              src={teachingImage}
               alt="Children"
               className="w-20 h-20 object-cover rounded-lg"
             />
@@ -127,7 +128,7 @@ export default function Children() {
                 </div>
 
                 {/* Buttons - Fully Aligned & Spaced Correctly */}
-                <div className="absolute bottom-3 left-3 right-3 flex justify-center gap-3">
+                <div className="absolute bottom-3 left-2 right-2 flex justify-center gap-1">
                   <button className="bg-red-500 text-white text-xs py-2 rounded-full w-1/2">
                     Assignment
                   </button>
