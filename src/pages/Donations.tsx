@@ -61,7 +61,14 @@ export default function Donations() {
   // Calculate progress percentage for gauge
   const donationProgress = Math.min(totalDonation / targetAmount, 1);
   const currentAmount = totalDonation;
-  const progress = Math.min((currentAmount / 150000) * 180, 180);
+  let amountOutOf = 30000;
+    
+    // Dynamically increase amountOutOf if currentAmount exceeds it
+    while (currentAmount > amountOutOf) {
+      amountOutOf *= 2;
+    }
+    
+    const progress = Math.min((currentAmount / amountOutOf) * 180, 180);
   
   const minAmount = 0;
   const maxAmount = 150000;
@@ -70,7 +77,7 @@ export default function Donations() {
   const userDonors = userDonations.map(d => ({
     id: d.donor_id,
     name: d.name,
-    role:`₹${d.amount}`,
+    role:`${d.amount}₹`,
     amount: d.amount
   }));
   
@@ -291,10 +298,10 @@ export default function Donations() {
                   />
                   <div className="text-xs">
                     <p className="font-semibold">{donor.name}</p>
-                    <p className={`${index < 5 ? 'text-white/80' : 'text-gray-500'}`}>{donor.role}</p>
+                    {/* <p className={`${index < 5 ? 'text-white/80' : 'text-gray-500'}`}>{donor.role}</p> */}
                   </div>
                 </div>
-                <div className="text-xs font-bold">{donor.amount.toLocaleString()}+ Points</div>
+                <div className="text-xs font-bold">{donor.amount.toLocaleString()}₹</div>
               </div>
             ))}
           </div>
@@ -335,12 +342,12 @@ export default function Donations() {
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-[#69b0ee] rounded-2xl p-3">
             <p className="text-lg font-bold text-[#4a6fa5] mb-0">You</p>
-            <p className="text-2xl font-bold text-[#ee6969] p-1 bg-white rounded-xl">{averageDonation.toLocaleString()}₹</p>
+            <p className="text-2xl font-bold text-[#ee6969] p-1 bg-white rounded-xl">{averageDonation.toLocaleString().split('.')[0]}₹</p>
           </div>
           <div className="bg-[#69b0ee] rounded-2xl p-3">
             <p className="text-lg font-bold text-[#4a6fa5] mb-0">Batch Average</p>
             <p className="text-2xl font-bold text-[#ee6969] p-1 bg-white rounded-xl !shadow-inner-xl relative z-100">
-              {batchStats ? batchStats.averageDonation.toLocaleString() : '0'}₹
+              {batchStats ? batchStats.averageDonation.toLocaleString().split('.')[0] : '0'}₹
             </p>
           </div>
         </div>

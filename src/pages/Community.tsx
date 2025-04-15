@@ -55,17 +55,17 @@ const CommunityPage = () => {
   // Star performers data
   const starPerformers = [
     {
-      name: 'Gabriel Summers',
-      role: 'Brand Manager',
-      quote: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley.',
-      avatar: user?.user_metadata?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop",
+      name: 'Priya Mehta',
+      role: 'Impact Leader',
+      quote: 'Being part of Pledge A Smile has been one of the most fulfilling experiences of my life. Every conversation I’ve had and every contribution I’ve helped raise reminds me that change begins with us. I’m proud to be creating impact, one family at a time. 💛',
+      avatar: "https://img.freepik.com/premium-vector/young-man-avatar-character-due-avatar-man-vector-icon-cartoon-illustration_1186924-4438.jpg?semt=ais_hybrid&w=740",
       color: 'pink'
     },
     {
-      name: 'Scarlett Nguyen',
-      role: 'Brand Ambassador',
-      quote: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley.',
-      avatar: user?.user_metadata?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50&h=50&fit=crop",
+      name: 'Aarav Khanna',
+      role: 'Community Champion',
+      quote: 'At first, I was nervous about reaching out to people but seeing how willing everyone is to help has been motivating. This internship has not only helped others but also helped me grow as a person. So grateful to be part of the Pledge A Smile family! 🌟',
+      avatar:"https://static.vecteezy.com/system/resources/thumbnails/029/364/952/small/3d-carton-of-boy-going-to-school-ai-photo.jpg",
       color: 'yellow'
     }
   ];

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Copy, Share2, ArrowRight, LogOut, Settings2, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { redirect, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import {
   getFundraisingAmount,
@@ -13,9 +13,8 @@ import {
   Child,
 } from "../lib/api";
 import LoginButton from "../components/LoginButton";
-import needleImage1 from '../../public/assets/needle.svg'
-import pencilImage2 from '../../public/assets/pencil_border.svg'
-
+import needleImage1 from "../../public/assets/needle.svg";
+import pencilImage2 from "../../public/assets/pencil_border.svg";
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -36,7 +35,9 @@ export default function Dashboard() {
       if (user) {
         try {
           console.log("user ID", user);
+          if(user.whatsapp_number == null){
 
+          }
           const [fundData, uData, stats, donations, childrenData] =
             await Promise.all([
               getFundraisingAmount(user.id),
@@ -66,6 +67,7 @@ export default function Dashboard() {
           console.log("childrens", childrenData);
 
           console.log("user data", userData);
+          
         } catch (error) {
           console.error("Error fetching data:", error);
         } finally {
@@ -105,7 +107,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4a6fa5]"></div>
       </div>
     );
   }
@@ -115,17 +117,15 @@ export default function Dashboard() {
   const getRankDetails = (status: number) => {
     switch (status) {
       case 0:
-        return { title: "Aspiring Change Maker", level: "LEVEL 1 (0/5k)" };
+        return { title: "Emerging Advocate", level: "LEVEL 1 (1k/5k)" };
       case 1:
-        return { title: "Emerging Advocate", level: "LEVEL 2 (5k/10k)" };
+        return { title: "Impact Builder", level: "LEVEL 2 (5k/10k)" };
       case 2:
-        return { title: "Impact Builder", level: "LEVEL 3 (10k/20k)" };
+        return { title: "Social Change Leader", level: "LEVEL 3 (10k/25k)" };
       case 3:
-        return { title: "Social Change Leader", level: "LEVEL 4 (20k+)" };
-      case 4:
-        return { title: "Top Contributor", level: "LEVEL 5 (50k+)" }; // Add a new case for status 4
+        return { title: "Visionary", level: "LEVEL 4 (25k+)" };
       default:
-        return { title: "Unknown", level: "LEVEL 0" };
+        return { title: "Beginner", level: "LEVEL 0" };
     }
   };
   // Assuming `userStatus` comes from an API response or state
@@ -136,21 +136,35 @@ export default function Dashboard() {
     Math.floor((currentAmount / 35000) * 2)
   );
   console.log("user data2", userData);
-  currentAmount = userData?.donations;
+  // currentAmount = userData?.donations;
   const displayName =
     userData?.full_name ||
     user?.user_metadata?.full_name ||
     user?.email?.split("@")[0] ||
     "User";
-
-  const progress = Math.min((currentAmount / 150000) * 180, 180); // Max 180 degrees for semi-circle
-  const minAmount = 5000;
-  const maxAmount = 120000;
+    let amountOutOf = 30000;
+    currentAmount = userData?.donations || 0;
+    
+    // Dynamically increase amountOutOf if currentAmount exceeds it
+    while (currentAmount > amountOutOf) {
+      amountOutOf *= 2;
+    }
+    
+    const progress = Math.min((currentAmount / amountOutOf) * 180, 180);
   const { title: rankTitle, level: rankLevel } = getRankDetails(
     userData?.social_status ?? 0
   );
   console.log("Rank Title:", rankTitle);
-console.log("Rank Level:", rankLevel);
+  console.log("Rank Level:", rankLevel);
+  const getAdjustedDaysLeft = (days: number) => {
+    const nextMultipleOf10 = Math.ceil((days + 1) / 10) * 10;
+    return nextMultipleOf10 - days;
+  };
+  
+  const getAddedDays = (days: number) => {
+    return Math.floor((days - 30) / 10 + 1) * 10;
+  };
+  
 
   return (
     <div className="p-4 pb-20">
@@ -158,12 +172,22 @@ console.log("Rank Level:", rankLevel);
       <div className="bg-red-400 rounded-3xl p-6 text-white mb-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="bg-white rounded-full px-3 py-2 text-gray-700 text-sm font-medium">
-              Days left{" "}
-              <span className="text-indigo-600 font-bold ml-1">
-                {userData?.days_left || "Invalid"}
-              </span>
-            </div>
+          <div className="bg-white rounded-full px-3 py-2 text-gray-700 text-sm font-medium">
+  Days left{" "}
+  {typeof userData?.days_left === "number" ? (
+    <span className="text-[#4a6fa5] font-bold ml-1">
+      {getAdjustedDaysLeft(userData.days_left)}
+      {userData.days_left > 30 && (
+        <span className="text-xs text-gray-500 ml-1 align-top">
+          +{getAddedDays(userData.days_left)}
+        </span>
+      )}
+    </span>
+  ) : (
+    "Invalid"
+  )}
+</div>
+
           </div>
           {user ? (
             <div className="relative">
@@ -207,8 +231,8 @@ console.log("Rank Level:", rankLevel);
       <div className="bg-white rounded-3xl p-6 shadow-sm mb-6">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold">
-            <span className="text-red-500">YOUR</span>{" "}
-            <span className="text-indigo-600">IMPACT</span>
+            <span className="text-[#F87171]">YOUR</span>{" "}
+            <span className="text-[#4a6fa5]">IMPACT</span>
           </h2>
           <p className="text-gray-500 text-sm">
             See how your goals can create impact
@@ -255,11 +279,20 @@ console.log("Rank Level:", rankLevel);
 
               {/* Needle/Pointer */}
               {/* <div 
-                className="absolute top-0 left-1/2 w-2 h-[125px] bg-red-500 origin-bottom transition-transform duration-1000"
+                className="absolute top-0 left-1/2 w-2 h-[125px] bg-[#F87171] origin-bottom transition-transform duration-1000"
                 style={{ transform: `translateX(-50%) rotate(${progress}deg)` }}
               >
                 <div className="absolute -top-2 -left-1 w-4 h-4 bg-yellow-300 rounded-full"></div>
               </div> */}
+            </div>
+            <div className="flex justify-between items-center gap-36">
+              <div className="text-sm text-[#969696] ">
+              ₹0
+              </div>
+              <div className="text-sm text-[#969696] ">
+              ₹{amountOutOf}
+              </div>
+
             </div>
             <div className="text-center mt-4">
               {/* <h2 className="text-lg font-medium mb-1">Amount Raised</h2> */}
@@ -267,51 +300,8 @@ console.log("Rank Level:", rankLevel);
                 ₹{currentAmount.toLocaleString("en-IN")}
               </p>
             </div>
+            
           </div>
-
-          {showAdjust && (
-            <div className="mt-6">
-              <label
-                htmlFor="targetAmount"
-                className="block text-sm font-medium mb-2"
-              >
-                Adjust Target Amount
-              </label>
-              <div className="relative">
-                <input
-                  type="range"
-                  id="targetAmount"
-                  min={minAmount}
-                  max={maxAmount}
-                  step="5000"
-                  value={targetAmount}
-                  onChange={(e) => setTargetAmount(Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-500"
-                />
-                <div className="flex justify-between text-sm mt-2">
-                  <span>₹{minAmount.toLocaleString("en-IN")}</span>
-                  <span>₹{targetAmount.toLocaleString("en-IN")}</span>
-                  <span>₹{maxAmount.toLocaleString("en-IN")}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* <button 
-            onClick={() => setShowAdjust(!showAdjust)}
-            className="absolute top-0 right-0 p-2 text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <Settings2 size={20} />
-          </button> */}
-
-          <p className="text-center text-sm mt-4 ">
-            *This funds a year of education for{" "}
-            <span className="text-red-500">
-              {childrenSupported}{" "}
-              {childrenSupported === 1 ? "child" : "children"}
-            </span>
-            .
-          </p>
         </div>
 
         {/* Rank Card */}
@@ -325,7 +315,7 @@ console.log("Rank Level:", rankLevel);
         >
           <p className="text-gray-600 text-sm mb-1">Your Rank</p>
           <h3 className="text-xl font-bold text-red-800">{rankTitle}</h3>
-          <p className="text-red-500 text-sm">{rankLevel}</p>
+          <p className="text-[#F87171] text-sm">{rankLevel}</p>
         </div>
 
         {/* Share Buttons */}
@@ -352,12 +342,12 @@ console.log("Rank Level:", rankLevel);
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">
-            <span className="text-red-500">WHO WE ARE</span>{" "}
-            <span className="text-indigo-600">WORKING FOR</span>
+            <span className="text-[#F87171]">WHO WE ARE</span>{" "}
+            <span className="text-[#4a6fa5]">WORKING FOR</span>
           </h2>
           <button
             onClick={() => navigate("/children")}
-            className="text-indigo-600 flex items-center gap-1 text-sm font-medium"
+            className="text-[#4a6fa5] flex items-center gap-1 text-sm font-medium"
           >
             View All <ArrowRight size={16} />
           </button>
@@ -386,7 +376,7 @@ console.log("Rank Level:", rankLevel);
                 )}
               </div>
               <div className="py-1 px-1">
-                <h3 className="text-lg font-bold text-indigo-600">
+                <h3 className="text-lg font-bold text-[#4a6fa5]">
                   {child.name}
                 </h3>
                 <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
@@ -400,7 +390,7 @@ console.log("Rank Level:", rankLevel);
                   </div>
                 </div>
                 <div className="flex mt-2 gap-2">
-                  <button className="bg-red-500 text-white text-[10px] md:text-xs px-2 md:px-3 py-1 rounded-full">
+                  <button className="bg-[#F87171] text-white text-[10px] md:text-xs px-2 md:px-3 py-1 rounded-full">
                     Assignment
                   </button>
                   {/* <button className="bg-indigo-500 text-white text-[10px] md:text-xs px-2 md:px-3 py-1 rounded-full">
@@ -434,7 +424,7 @@ console.log("Rank Level:", rankLevel);
                 className="w-20 h-20 rounded-full object-cover"
               />
               <div>
-                <h2 className="text-xl font-bold text-indigo-600">
+                <h2 className="text-xl font-bold text-[#4a6fa5]">
                   {selectedChild.name}
                 </h2>
                 <p className="text-gray-500">{selectedChild.age} years</p>
@@ -470,7 +460,7 @@ console.log("Rank Level:", rankLevel);
       {/* Crowdfunding Hacks */}
       <div className="mt-8">
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-xl font-bold text-indigo-700">
+          <h3 className="text-xl font-bold text-[#4a6fa5]">
             CROWDFUNDING HACKS
           </h3>
           <span className="text-xl">💡</span>
@@ -482,7 +472,7 @@ console.log("Rank Level:", rankLevel);
           >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                <span className="text-red-500">💡</span>
+                <span className="text-[#F87171]">💡</span>
               </div>
               <h4 className="font-semibold">CAPTURING ATTENTION</h4>
             </div>
@@ -494,7 +484,7 @@ console.log("Rank Level:", rankLevel);
           >
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                <span className="text-red-500">💡</span>
+                <span className="text-[#F87171]">💡</span>
               </div>
               <h4 className="font-semibold">BUILDING</h4>
             </div>
@@ -503,7 +493,7 @@ console.log("Rank Level:", rankLevel);
         </div>
         <button
           onClick={() => navigate("/donations")}
-          className="w-full text-red-500 font-semibold mt-4 text-center hover:text-red-600 transition-colors"
+          className="w-full text-[#F87171] font-semibold mt-4 text-center hover:text-red-600 transition-colors"
         >
           Check all your donations →
         </button>

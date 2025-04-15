@@ -15,6 +15,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import RankDetailPage from './pages/Rank';
 import ModulePlayer from './pages/Module';
 import ModuleDetailPage from './pages/ModuleDetail';
+import OnboardingPage from './pages/OnboardingPage';
 
 function App() {
   return (
@@ -34,6 +35,8 @@ function App() {
             <Route path="donations" element={<Donations />} />
             <Route path="explore" element={ <Explore />} />
             <Route path="community" element={<Community />} />
+            <Route path="onboarding" element={<OnboardingPage />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="hacks/:type" element={<CrowdfundingHacks />} />
             <Route path="children" element={<Children />} />
             <Route path="children/:id" element={<ChildDetail />} />

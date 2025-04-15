@@ -125,13 +125,14 @@ export default function ContactManagement() {
       {/* Blue header section with title and image */}
       <div className="p-4 text-[#4a6fa5]">
         <div className="bg-[#daeeff] flex items-center justify-between p-3 rounded-xl">
-          <div className="w-1/4">
+          <div className="w-60 px-2">
             <img src={contactHeader} alt="IMG" className="h-12" />
           </div>
           <div className="w-auto">
             <p className="text-xs">
-              Lorem Ipsum is Simply Dummy Text Of The Printing And Typesetting Industry. Lorem Ipsum Has Been The Industry's Standard Dummy Text Ever Since The 1500s, When An Unknown Printer Took A Galley
-            </p>
+            Use this space to manage the contacts you plan to reach out to during your internship. Whether it’s friends, family, neighbours, or colleagues—add their names here so you can stay organised and follow up effectively.
+
+<br/>The more people you connect with, the bigger your impact! 💛            </p>
           </div>
         </div>
       </div>

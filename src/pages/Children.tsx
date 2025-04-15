@@ -96,48 +96,46 @@ export default function Children() {
               className="bg-amber-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow shadow-[1px_10px_15px_10px_rgba(0,0,0,0.07)]"
             >
               <div
-  className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg"
-  style={{
-    backgroundImage: `url(${child.image_url})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  }}
->
-<div className="absolute inset-0 bg-gradient-to-t from-black to-transparent shadow-[1px_10px_15px_7px_rgba(0,0,0,0.07)]"></div>
-  {/* Priority Label */}
-  {child.priority === "High" && (
-    <div className="absolute top-3 left-3 bg-green-500 text-white text-[10px] px-2 py-1 rounded-full">
-      High Priority
-    </div>
-  )}
+                className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg"
+                style={{
+                  backgroundImage: `url(${child.image_url})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent shadow-[1px_10px_15px_7px_rgba(0,0,0,0.07)]"></div>
+                {/* Priority Label */}
+                {child.priority === "High" && (
+                  <div className="absolute top-3 left-3 bg-green-500 text-white text-[10px] px-2 py-1 rounded-full">
+                    High Priority
+                  </div>
+                )}
 
-  {/* Name & Info Overlay */}
-  <div className="absolute bottom-14 w-full px-3 text-white">
-    <h3 className="text-lg font-bold">{child.name}</h3>
-    <div className="flex items-center gap-2 text-xs mt-1">
-      <div className="flex items-center">
-        <span className="mr-1">🗓️</span>
-        <span>{child.age} Years</span>
-      </div>
-      <div className="flex items-center">
-        <span className="mr-1">📍</span>
-        <span>{child.location}</span>
-      </div>
-    </div>
-  </div>
+                {/* Name & Info Overlay */}
+                <div className="absolute bottom-14 w-full px-3 text-white">
+                  <h3 className="text-lg font-bold">{child.name}</h3>
+                  <div className="flex items-center gap-2 text-xs mt-1">
+                    <div className="flex items-center">
+                      <span className="mr-1">🗓️</span>
+                      <span>{child.age} Years</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="mr-1">📍</span>
+                      <span>{child.location}</span>
+                    </div>
+                  </div>
+                </div>
 
-  {/* Buttons - Fully Aligned & Spaced Correctly */}
-  <div className="absolute bottom-3 left-3 right-3 flex justify-center gap-3">
-    <button className="bg-red-500 text-white text-xs p-2 rounded-full w-1/2">
-      Assignment
-    </button>
-    <button className="bg-indigo-500 text-white text-xs p-2 rounded-full w-1/2">
-      See More
-    </button>
-  </div>
-</div>
-
-
+                {/* Buttons - Fully Aligned & Spaced Correctly */}
+                <div className="absolute bottom-3 left-3 right-3 flex justify-center gap-3">
+                  <button className="bg-red-500 text-white text-xs py-2 rounded-full w-1/2">
+                    Assignment
+                  </button>
+                  <button className="bg-indigo-500 text-white text-xs py-2 rounded-full w-1/2">
+                    See More
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -198,6 +196,5 @@ export default function Children() {
         </div>
       )}
     </div>
-    
   );
 }

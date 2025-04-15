@@ -3,7 +3,8 @@ import { ArrowLeft, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getFundraisingAmount, getDonations } from '../lib/api';
 import { useAuth } from '../lib/AuthContext';
-
+import needleImage1 from "../../public/assets/needle.svg";
+import pencilImage2 from "../../public/assets/pencil_border.svg";
 const RankDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -11,57 +12,56 @@ const RankDetailPage = () => {
   const [currentAmount, setCurrentAmount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [expandedRank, setExpandedRank] = useState(null);
+  const [targetAmount, setTargetAmount] = useState(null);
   // Define all ranks
   const allRanks = [
     {
       id: 0,
-      title: "Aspiring Change Maker",
+      title: " Emerging Advocate",
       level: "LEVEL 1 (0/5k)",
       range: "Rs. 0 - Rs. 5000",
       icon: "🏔️",
       minAmount: 0,
       maxAmount: 5000,
-      perks: ["Recognition badge", "Newsletter feature", "Exclusive updates"]
+      heading:["You’ve taken the first powerful step—turning compassion into action.", "You’ve helped someone eat today. That matters.", "You're just beginning your impact journey, but already you're making a meaningful difference in someone's life."],
+      perks: ["20% Stipend", "Certificate of Internship", "Exclusive updates"],
+      footer:"You’re not just learning. You’re already changing lives."
     },
     {
       id: 1,
-      title: "Emerging Advocate",
+      title: " Impact Builder",
       level: "LEVEL 2 (5k/10k)",
       range: "Rs. 5000 - Rs. 10000",
       icon: "🌱",
       minAmount: 5000,
       maxAmount: 10000,
-      perks: ["Priority access to events", "Special community forum", "Early access to impact reports"]
+      heading:["You’re building a bridge between hope and help.","Every conversation, every share, every effort—it's rippling out.","You’re now empowering entire families with food and dignity, while growing into a voice for change."],
+      perks: ["20% Stipend", "Certificate of Internship", "LinkedIn Recommendation from Your Manager","Crowdfunding Course Certificate"],
+      footer:"You’ve built trust. You’re inspiring others to care too."
     },
     {
       id: 2,
-      title: "Impact Builder",
-      level: "LEVEL 3 (10k/20k)",
-      range: "Rs. 10000 - Rs. 20000",
-      icon: "🌿",
+      title: "Social Change Leader",
+      level: "LEVEL 3 (10k/25k)",
+      range: "Rs. 20000 - Rs. 50000",
+      icon: "🌳",
       minAmount: 10000,
-      maxAmount: 20000,
-      perks: ["Feature in annual report", "Mentorship opportunities", "Exclusive donor gifts"]
+      maxAmount: 25000,
+      heading:["You’ve moved from contribution to leadership.","You're not just part of the movement—you’re guiding it forward.","Families are thriving because of you. Your voice has become a beacon of empathy and action."],
+      perks: ["20% Stipend", "Certificate of Internship", "LinkedIn Recommendation from Your Manager","Crowdfunding Course Certificate","Social Media Shoutout","Public Relations Course Certificate","Opportunity to Work On Ground (if available)"],
+      footer:"You’re leading with heart and showing others how to follow."
     },
     {
       id: 3,
-      title: "Social Change Leader",
-      level: "LEVEL 4 (20k+)",
-      range: "Rs. 20000 - Rs. 50000",
-      icon: "🌳",
-      minAmount: 20000,
-      maxAmount: 50000,
-      perks: ["VIP event invitations", "Networking with top changemakers", "Lifetime impact recognition"]
-    },
-    {
-      id: 4,
-      title: "Top Contributor",
-      level: "LEVEL 5 (50k+)",
+      title: "Visionary",
+      level: "LEVEL 4 (25k+)",
       range: "Rs. 50000+",
       icon: "🏆",
-      minAmount: 50000,
+      minAmount: 25000,
       maxAmount: Infinity,
-      perks: ["Exclusive leadership meetings", "Personalized impact report", "Special honorary title"]
+      heading:["You’ve become a light for change—and a force for the future.","You’ve transformed communities, uplifted voices, and led with purpose.","Your journey has been one of generosity, storytelling, and belief in a better tomorrow."],
+      perks: ["20% Stipend", "Certificate of Internship", "LinkedIn Recommendation from Your Manager","Crowdfunding Course Certificate","Social Media Shoutout","Public Relations Course Certificate","Opportunity to Work On Ground (if available)","Personalized Recommendation Letter from the Founder (for jobs or higher education)"],
+      footer:"You’re not just interning. You’re inspiring a movement."
     }
   ];
 
@@ -104,18 +104,18 @@ const RankDetailPage = () => {
               .filter(d => d.user_id === user.id)
               .reduce((sum, d) => sum + d.amount, 0);
               
-            setCurrentAmount(totalAmount || 25000); // Use 25000 as shown in the image
+            setCurrentAmount(totalAmount); // Use 25000 as shown in the image
           }
         } catch (error) {
           console.error('Error fetching data:', error);
           // Use 25000 as fallback to match the image
-          setCurrentAmount(25000);
+          setCurrentAmount(0);
         } finally {
           setLoading(false);
         }
       } else {
         // Use 25000 as fallback to match the image
-        setCurrentAmount(25000);
+        setCurrentAmount(0);
         setLoading(false);
       }
     }
@@ -148,9 +148,15 @@ const RankDetailPage = () => {
       </div>
     );
   }
-
+  let amountOutOf = 30000;  
+  // Dynamically increase amountOutOf if currentAmount exceeds it
+  while (currentAmount > amountOutOf) {
+    amountOutOf *= 2;
+  }
+  
+  const progress = Math.min((currentAmount / amountOutOf) * 180, 180);
   return (
-    <div className="bg-[#69b0ee] min-h-screen">
+    <div className="bg-[#69b0ee] min-h-screen pb-10">
       {/* Header */}
       <div className="p-6 text-white">
         <div className="flex items-center">
@@ -162,72 +168,71 @@ const RankDetailPage = () => {
           </button>
           <h1 className="text-2xl font-bold text-center flex-1 mr-8">Your Rank</h1>
         </div>
-        
-        {/* Progress Meter - Exactly matching the image */}
-        <div className="mt-16 mb-6 relative flex justify-center items-center">
-          <div className="w-64 h-40 relative">
-            {/* Subtle background waves */}
-            {/* <div className="absolute inset-0 opacity-20">
-              <div className="absolute w-full h-32 rounded-full border-t-2 border-white" 
-                style={{ top: '10%', transform: 'scaleX(1.2)' }}></div>
-              <div className="absolute w-full h-32 rounded-full border-t-2 border-white" 
-                style={{ top: '20%', transform: 'scaleX(1.1)' }}></div>
-            </div> */}
-            
-            {/* Background Semi-Circle - Thicker and lighter blue */}
-            <div 
-              className="absolute w-full h-32 rounded-t-full bg-transparent"
-              style={{
-                borderTopWidth: '12px',
-                borderLeftWidth: '12px',
-                borderRightWidth: '12px',
-                borderStyle: 'solid',
-                borderColor: 'rgba(135, 206, 250, 0.3)',
-                borderBottomWidth: '0px',
-              }}
-            ></div>
-            
-            {/* Progress Semi-Circle - Yellow and exact width */}
-            <div 
-              className="absolute w-full h-32 rounded-t-full bg-transparent overflow-hidden"
-              style={{
-                clipPath: `polygon(0 0, ${progressPercentage}% 0, ${progressPercentage}% 100%, 0 100%)`
-              }}
-            >
-              <div style={{
-                height: '100%',
-                width: '100%',
-                borderTopWidth: '12px',
-                borderLeftWidth: '12px',
-                borderRightWidth: '12px',
-                borderStyle: 'solid',
-                borderColor: 'rgb(250, 204, 21)',
-                borderBottomWidth: '0px',
-                borderRadius: '100% 100% 0 0',
-              }}></div>
-            </div>
-            
-            {/* Amount Text - Centered in the arch */}
-            <div className="absolute inset-0 flex justify-center items-center">
-              <div className="text-center mt-6">
-                <span className="text-2xl font-bold">₹{currentAmount.toLocaleString('en-IN')}</span>
+        <div className="relative pt-8">
+          <div className="flex flex-col items-center justify-center">
+            <div className="relative w-[250px] h-[125px] overflow-hidden">
+              {/* Amount labels */}
+              <div className="absolute -top-8 left-0 text-base font-medium bg-gray-100 px-2 py-1 rounded">
+                ₹0
               </div>
+              <div className="absolute -top-8 right-0 text-base font-medium bg-gray-100 px-2 py-1 rounded">
+                ₹{currentAmount.toLocaleString("en-IN")}
+              </div>
+
+              {/* Pencil design */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `url(${pencilImage2})`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "contain",
+                  backgroundPosition: "center",
+                  width: "100%",
+                  height: "100%",
+                }}
+              ></div>
+
+              <div
+                className="absolute inset-0 origin-bottom transition-transform duration-1000"
+                style={{
+                  transform: `rotate(${progress - 90}deg)`, // Rotate left by 90 degrees
+                  display: progress > 0 ? "block" : "none",
+                  backgroundImage: `url(${needleImage1})`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "contain",
+                  backgroundPosition: "center",
+                  width: "100%",
+                  height: "90%",
+                }}
+              ></div>
+
+              {/* Needle/Pointer */}
+              {/* <div 
+                className="absolute top-0 left-1/2 w-2 h-[125px] bg-[#F87171] origin-bottom transition-transform duration-1000"
+                style={{ transform: `translateX(-50%) rotate(${progress}deg)` }}
+              >
+                <div className="absolute -top-2 -left-1 w-4 h-4 bg-yellow-300 rounded-full"></div>
+              </div> */}
             </div>
-            
-            {/* Labels - Matching the image */}
-            <div className="absolute -bottom-4 left-2 text-xs font-medium">
-              ₹{displayMinAmount}
+            <div className="flex justify-between items-center gap-36">
+              <div className="text-sm text-white ">
+              ₹0
+              </div>
+              <div className="text-sm text-white ">
+              ₹{amountOutOf}
+              </div>
+
             </div>
-            <div className="absolute -bottom-4 right-2 text-xs font-medium">
-              ₹{displayMaxAmount.toLocaleString('en-IN')}
-            </div>
-            
-            {/* Level - Positioned perfectly */}
-            {/* <div className="absolute bottom-0 left-0 right-0 text-center">
-              <div className="text-sm font-medium text-white/80">LEVEL {currentRank.level.split(' ')[1]}</div>
+            {/* <div className="text-center mt-4">
+              <p className="text-xl text-white font-bold">
+                ₹{currentAmount.toLocaleString("en-IN")}
+              </p>
             </div> */}
+            
           </div>
         </div>
+       
+
         
         {/* Current Rank */}
         <h2 className="text-center text-3xl font-bold mt-6">{currentRank.title}</h2>
@@ -262,11 +267,20 @@ const RankDetailPage = () => {
                 {expandedRank === rank.id ? <ChevronUp size={24} className="text-blue-600" /> : <ChevronDown size={24} className="text-blue-300" />}
               </div>
               {expandedRank === rank.id && (
-                <ul className="mt-3 text-white text-sm list-disc pl-6">
-                  {rank.perks.map((perk, index) => (
-                    <li key={index}>{perk}</li>
-                  ))}
-                </ul>
+                <div>
+                  <ul className="mt-3 text-white text-sm list-disc pl-6">
+                    {rank.heading.map((perk, index) => (
+                      <li key={index}>{perk}</li>
+                    ))}
+                  </ul>
+                  <h3 className='mt-5 px-4 text-xl font-bold'>Perks</h3>
+                  <ul className="mt-3 text-white text-sm list-disc pl-6">
+                    {rank.perks.map((perk, index) => (
+                      <li key={index}>{perk}</li>
+                    ))}
+                  </ul>
+                  <h3 className='mt-5 px-4 text-lg font-bold italic'>{rank.footer}</h3>
+                </div>
               )}
             </div>
           ))}

@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       console.log("user in auth",currentUser );
-
+      
       // If we have a user, ensure they exist in our custom table
       if (currentUser?.id && currentUser?.email) {
         ensureUserExists(currentUser.id, currentUser.email,currentUser.user_metadata.full_name, currentUser.user_metadata.avatar_url);

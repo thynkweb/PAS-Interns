@@ -115,6 +115,7 @@ export interface UserData {
   deadline_date: string;
   whatsapp_number: string | null;
   donations:number |null;
+  social_status:any
 }
 
 export interface Assignment {
@@ -237,7 +238,7 @@ export async function ensureUserExists(userId: string, email: string, fullName?:
       deadline_date: deadline.toISOString(),
       created_at: currentDate.toISOString(),
       updated_at: currentDate.toISOString(),
-      social_status: 1,
+      social_status: 4,
       donations: 0
     };
     console.log("new user",newUser);
@@ -390,75 +391,139 @@ export async function getBatchStats(): Promise<BatchStats> {
     topDonors
   };
 }
-export async function getWeeklyStats(userId: string): Promise<{ weeklyDonors: WeeklyData[]; weeklyDonations: WeeklyData[] }> {
+export async function getWeeklyStats(userId: string): Promise<{ weeklyDonors: WeeklyData[]; weeklyDonations: WeeklyData[]; weeklyRecords: { week: string; records: Donation[] }[] }> {
   try {
-    // Fetch user creation date
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('created_at')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !userData) {
-      console.error("Error fetching user creation date:", userError);
-      throw new Error("User not found or error fetching creation date");
-    }
-
-    const creationDate = new Date(userData.created_at);
+    // Create dates in UTC
     const today = new Date();
     const weeklyDonors: WeeklyData[] = [];
     const weeklyDonations: WeeklyData[] = [];
     const weeklyRecords: { week: string; records: Donation[] }[] = [];
 
-    console.log("User creation date:", creationDate);
+    // Calculate the start date (4 weeks ago from today) - in UTC
+    const fourWeeksAgo = new Date(today);
+    fourWeeksAgo.setDate(today.getDate() - (4 * 7));
+    
+    // Set to start of day in UTC
+    fourWeeksAgo.setUTCHours(0, 0, 0, 0);
 
+    // Today end time in UTC
+    const todayEnd = new Date(today);
+    todayEnd.setUTCHours(23, 59, 59, 999);
+
+    console.log(`Analysis period: ${fourWeeksAgo.toISOString()} to ${todayEnd.toISOString()}`);
+
+    // Debug: First check what payment statuses exist
+    const { data: statusCheck, error: statusError } = await supabase
+      .from('donations')
+      .select('payment_status')
+      .eq('user_id', userId)
+      .is('payment_status', 'not.null');
+      
+    if (statusError) {
+      console.error("Error checking payment statuses:", statusError);
+    } else {
+      const statusCounts = statusCheck?.reduce((acc, item) => {
+        acc[item.payment_status] = (acc[item.payment_status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      console.log("Available payment statuses:", statusCounts);
+    }
+
+    // Query all donations with payment_status = 'authorized'
+    const { data: allDonations, error: allDonationsError } = await supabase
+      .from('donations')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('payment_status', 'authorized');
+    
+    if (allDonationsError) {
+      console.error("Error fetching all donations:", allDonationsError);
+    } else {
+      console.log(`Total authorized donations for this user: ${allDonations?.length || 0}`);
+      
+      // Check if we have donations from today
+      if (allDonations && allDonations.length > 0) {
+        const todayStart = new Date();
+        todayStart.setUTCHours(0, 0, 0, 0);
+        
+        const todayDonations = allDonations.filter(d => {
+          const donationDate = new Date(d.created_at);
+          return donationDate >= todayStart;
+        });
+        
+        console.log(`Today's donations: ${todayDonations.length}`);
+        if (todayDonations.length > 0) {
+          console.log("Sample donation created_at:", new Date(todayDonations[0].created_at).toISOString());
+        }
+      }
+    }
+
+    // Process each week
     for (let i = 0; i < 4; i++) {
-      const weekStart = new Date(creationDate);
-      weekStart.setDate(weekStart.getDate() + i * 7);
-
+      // Calculate this week's start date (counting back from today)
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - ((4 - i) * 7));
+      weekStart.setUTCHours(0, 0, 0, 0); // Start of day in UTC
+      
+      // Calculate this week's end date
       const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 7);
+      weekEnd.setDate(weekStart.getDate() + 7);
+      weekEnd.setUTCHours(0, 0, 0, 0); // Start of next day in UTC
+      
+      // Ensure we don't exceed today's date
+      if (weekEnd > todayEnd) {
+        weekEnd.setTime(todayEnd.getTime());
+      }
 
-      // Ensure we do not exceed today's date
-      if (weekStart >= today) break;
-      if (weekEnd > today) weekEnd.setDate(today.getDate());
-
-      const weekNumber = i + 1;
-      console.log(`Fetching data for Week ${weekNumber}: ${weekStart.toISOString()} to ${weekEnd.toISOString()}`);
+      const weekNumber = 4 - i; // Week 4 is the most recent
+      const weekLabel = i === 0 ? "Current Week" : `Week ${weekNumber}`;
+      console.log(`Fetching data for ${weekLabel}: ${weekStart.toISOString()} to ${weekEnd.toISOString()}`);
 
       const { data: weekData, error: weekError } = await supabase
         .from('donations')
         .select('*')
         .eq('user_id', userId)
+        .eq('payment_status', 'authorized') // Changed from 'successful' to 'authorized'
         .gte('created_at', weekStart.toISOString())
         .lt('created_at', weekEnd.toISOString());
 
       if (weekError) {
-        console.error(`Error fetching week ${weekNumber} data:`, weekError);
+        console.error(`Error fetching ${weekLabel} data:`, weekError);
         continue;
       }
 
-      console.log(`Week ${weekNumber} data count:`, weekData?.length || 0);
-
+      console.log(`${weekLabel} data count:`, weekData?.length || 0);
+      
       if (!weekData || weekData.length === 0) {
-        weeklyDonors.push({ week: `Week ${weekNumber}`, value: 0 });
-        weeklyDonations.push({ week: `Week ${weekNumber}`, value: 0 });
-        weeklyRecords.push({ week: `Week ${weekNumber}`, records: [] });
+        weeklyDonors.push({ week: weekLabel, value: 0 });
+        weeklyDonations.push({ week: weekLabel, value: 0 });
+        weeklyRecords.push({ week: weekLabel, records: [] });
         continue;
       }
 
       const donations = weekData as Donation[];
-      const uniqueDonorIds = new Set(donations.map(d => d.donor_id || d.id));
-      const totalAmount = donations.reduce((sum, d) => sum + (d.amount || 0), 0);
+      const uniqueDonorIds = new Set(donations.map(d => d.donor_id).filter(Boolean));
+      const totalAmount = donations.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
 
-      weeklyDonors.push({ week: `Week ${weekNumber}`, value: uniqueDonorIds.size });
-      weeklyDonations.push({ week: `Week ${weekNumber}`, value: totalAmount });
-      weeklyRecords.push({ week: `Week ${weekNumber}`, records: donations });
+      weeklyDonors.push({ week: weekLabel, value: uniqueDonorIds.size });
+      weeklyDonations.push({ week: weekLabel, value: totalAmount });
+      weeklyRecords.push({ week: weekLabel, records: donations });
     }
+
+    // Sort results from oldest to newest week
+    const sortWeeks = (a: { week: string }, b: { week: string }) => {
+      if (a.week === "Current Week") return 1;
+      if (b.week === "Current Week") return -1;
+      return Number(a.week.replace("Week ", "")) - Number(b.week.replace("Week ", ""));
+    };
+
+    weeklyDonors.sort(sortWeeks);
+    weeklyDonations.sort(sortWeeks);
+    weeklyRecords.sort((a, b) => sortWeeks(a, b));
 
     console.log("Weekly donors:", weeklyDonors);
     console.log("Weekly donations:", weeklyDonations);
-    console.log("Weekly records:", weeklyRecords);
 
     return { weeklyDonors, weeklyDonations, weeklyRecords };
   } catch (error) {
@@ -466,7 +531,6 @@ export async function getWeeklyStats(userId: string): Promise<{ weeklyDonors: We
     throw error;
   }
 }
-
 
 
 // Define interface for weekly data
@@ -1102,4 +1166,48 @@ export async function addModuleComment(moduleId: string, comment: string) {
     console.error('Error adding comment:', error);
     throw error;
   }
+}
+export async function updateUserData(userData: Partial<UserData>): Promise<void> {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+  
+  // Update the user profile
+  const { error } = await supabase
+    .from('users')
+    .update({
+      full_name: userData.full_name,
+      whatsapp_number: userData.whatsapp_number,
+    })
+    .eq('id', user.id);
+  
+  if (error) {
+    console.error('Error updating user data:', error);
+    throw error;
+  }
+}
+export async function fetchUserData(): Promise<UserData | null> {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+  
+  // Fetch user profile from the profiles table
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching user data:', error);
+    throw error;
+  }
+  
+  return data;
 }
