@@ -77,7 +77,7 @@ export default function Dashboard() {
     fetchData();
   }, [user]);
 
-  const donateUrl = `https://dev.pledgeasmile.com/donate?r=${
+  const donateUrl = `https://www.muskurahat.org.in/donate?r=${
     userData?.referral_code || "Invalid_code"
   }`;
 
