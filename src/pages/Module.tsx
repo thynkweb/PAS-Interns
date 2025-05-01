@@ -420,13 +420,13 @@ export default function ModulePlayer() {
                 <button
                   onClick={handleSubmitComment}
                   disabled={!newComment.trim() || submittingComment}
-                  className={`bg-red-500 text-white rounded-lg px-4 py-2 text-sm flex items-center gap-1 ${
+                  className={`bg-red-500 text-white rounded-lg px-4 py-2 text-sm flex items-center gap-1 overflow-hidden ${
                     !newComment.trim() || submittingComment
                       ? "opacity-50"
                       : "hover:bg-red-600"
                   }`}
                 >
-                  <Send size={16} />
+                  <Send className="text-16 sm:text-12"  />
                   <span className="hidden md:block">Send</span>
                 </button>
               </div>
