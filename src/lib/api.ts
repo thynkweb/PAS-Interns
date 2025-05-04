@@ -296,16 +296,17 @@ export async function getPodcasts(): Promise<Podcast[]> {
 
 export async function getFundraisingAmount(userId: string): Promise<FundraisingAmount | null> {
   try {
-    // Instead of using a separate table, we'll calculate from donations
+    // Added payment_status filter
     const { data: donations, error } = await supabase
       .from('donations')
       .select('amount')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('payment_status', 'captured'); // Added the payment status filter
 
     if (error) throw error;
 
     const currentAmount = donations?.reduce((sum, d) => sum + d.amount, 0) || 0;
-    
+
     return {
       id: userId, // Use userId as the id since we don't have a separate table
       user_id: userId,
@@ -320,12 +321,14 @@ export async function getFundraisingAmount(userId: string): Promise<FundraisingA
   }
 }
 
+
 export async function getDonations(userId: string): Promise<Donation[]> {
   try {
     const { data, error } = await supabase
       .from('donations')
       .select('*')
       .or(`user_id.eq.${userId},donor_id.eq.${userId}`)
+      .eq('payment_status', 'captured') // Added the payment status filter
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -339,28 +342,29 @@ export async function getBatchStats(): Promise<BatchStats> {
   const { data, error } = await supabase
     .from('donations')
     .select('*')
+    .eq('payment_status', 'captured') // Added the payment status filter
     .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-  
+
   if (error) {
     console.error('Error fetching batch donations:', error);
     throw new Error('Failed to load batch donations');
   }
-  
+
   // Calculate batch statistics
   const donations = data as Donation[];
   const totalAmount = donations.reduce((sum, d) => sum + d.amount, 0);
-  console.log("batch donations",donations);
-  
+  console.log("batch donations", donations);
+
   // Count unique donors
   const uniqueDonors = new Set(donations.map(d => d.id));
   const totalDonors = uniqueDonors.size;
-  
+
   // Calculate average donation
   const averageDonation = totalDonors > 0 ? totalAmount / totalDonors : 0;
-  
+
   // Calculate top donors
   const donorMap = new Map();
-  
+
   // Aggregate donations by donor
   donations.forEach(donation => {
     const donorId = donation.donor_id;
@@ -378,12 +382,12 @@ export async function getBatchStats(): Promise<BatchStats> {
       });
     }
   });
-  
+
   // Convert to array and sort to get top donors
   const topDonors = Array.from(donorMap.values())
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 5);
-  
+
   return {
     totalAmount,
     totalDonors,
@@ -415,7 +419,7 @@ export async function getWeeklyStats(userId: string): Promise<{ weeklyDonors: We
       .from('donations')
       .select('*')
       .eq('user_id', userId)
-      .eq('payment_status', 'authorized')
+      .eq('payment_status', 'captured')
       .gte('created_at', fourWeeksAgo.toISOString())
       .lte('created_at', todayEnd.toISOString());
     
@@ -424,7 +428,7 @@ export async function getWeeklyStats(userId: string): Promise<{ weeklyDonors: We
       throw allDonationsError;
     }
     
-    console.log(`Total authorized donations in period: ${allDonations?.length || 0}`);
+    console.log(`Total captured donations in period: ${allDonations?.length || 0}`);
     
     // Create an array to hold our week data before sorting
     const weeksData = [];
@@ -523,25 +527,26 @@ export async function getTopDonors(): Promise<TopDonor[]> {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoString = thirtyDaysAgo.toISOString();
-    
+
     // Fetch donations from the last 30 days
     const { data, error } = await supabase
       .from('donations')
       .select('*')
+      .eq('payment_status', 'captured') // Added the payment status filter
       .gte('created_at', thirtyDaysAgoString);
-    
+
     if (error) {
       console.error('Error fetching donations:', error);
       throw new Error('Failed to load donations');
     }
-    
+
     // Cast data to Donation type
     const donations = data as Donation[];
     console.log(`Fetched ${donations.length} donations from the last 30 days`);
-    
+
     // Aggregate donations by donor
     const donorMap = new Map<string, TopDonor>();
-    
+
     donations.forEach(donation => {
       const donorId = donation.id;
       
@@ -564,18 +569,18 @@ export async function getTopDonors(): Promise<TopDonor[]> {
         });
       }
     });
-    
+
     // Convert to array and sort to get top donors by amount
     const topDonors = Array.from(donorMap.values())
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5);
-    
+
     if (topDonors.length === 0) {
       console.warn('No donors found in the last 30 days');
     } else if (topDonors.length < 5) {
       console.warn(`Only found ${topDonors.length} donors in the last 30 days`);
     }
-    
+
     return topDonors;
   } catch (error) {
     console.error('Error in getTopDonors:', error);
@@ -830,6 +835,7 @@ export async function getUserDonationHistory(userId: string) {
       .from('donations')
       .select('amount, created_at')
       .eq('user_id', userId)
+      .eq('payment_status', 'captured') // Added the payment status filter
       .order('created_at');
 
     if (error) throw error;
