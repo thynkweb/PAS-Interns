@@ -373,7 +373,7 @@ export default function Donations() {
                     {index + 1}
                   </div>
                   <img
-                    src={`https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=32&h=32&fit=crop`}
+                    src={donor.avatar || `https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=32&h=32&fit=crop`}
                     alt={donor.name}
                     className="w-8 h-8 rounded-full object-cover"
                   />

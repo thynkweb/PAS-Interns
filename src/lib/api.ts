@@ -523,63 +523,66 @@ export async function getWeeklyStats(userId: string): Promise<{ weeklyDonors: We
 
 export async function getTopDonors(): Promise<TopDonor[]> {
   try {
-    // Calculate date 30 days ago
+    // Get date 30 days ago
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoString = thirtyDaysAgo.toISOString();
 
-    // Fetch donations from the last 30 days
-    const { data, error } = await supabase
+    // Fetch donations
+    const { data: donationsData, error: donationError } = await supabase
       .from('donations')
-      .select('*')
-      .eq('payment_status', 'captured') // Added the payment status filter
+      .select('amount, user_id')
+      .eq('payment_status', 'captured')
       .gte('created_at', thirtyDaysAgoString);
 
-    if (error) {
-      console.error('Error fetching donations:', error);
+    if (donationError) {
+      console.error('Error fetching donations:', donationError);
       throw new Error('Failed to load donations');
     }
 
-    // Cast data to Donation type
-    const donations = data as Donation[];
-    console.log(`Fetched ${donations.length} donations from the last 30 days`);
+    // Aggregate donation amounts by user_id
+    const userDonationMap = new Map<string, number>();
 
-    // Aggregate donations by donor
-    const donorMap = new Map<string, TopDonor>();
-
-    donations.forEach(donation => {
-      const donorId = donation.id;
-      
-      if (donorMap.has(donorId)) {
-        // Update existing donor with additional amount
-        const existingDonor = donorMap.get(donorId)!;
-        donorMap.set(donorId, {
-          ...existingDonor,
-          amount: existingDonor.amount + donation.amount
-        });
-      } else {
-        // Add new donor to the map
-        donorMap.set(donorId, {
-          id: donorId,
-          name: donation.name,
-          amount: donation.amount,
-          role: determineRole(donation.amount), // Dynamically determine role based on amount
-          email: donation.email || '', // Include email if available
-          avatar: donation?.avatar_url || '' // Include avatar if available
-        });
-      }
+    donationsData.forEach(donation => {
+      const userId = donation.user_id;
+      if (!userId) return;
+      userDonationMap.set(userId, (userDonationMap.get(userId) || 0) + donation.amount);
     });
 
-    // Convert to array and sort to get top donors by amount
-    const topDonors = Array.from(donorMap.values())
-      .sort((a, b) => b.amount - a.amount)
+    // Get top 5 user_ids by donation amount
+    const sortedUserEntries = Array.from(userDonationMap.entries())
+      .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
 
-    if (topDonors.length === 0) {
-      console.warn('No donors found in the last 30 days');
-    } else if (topDonors.length < 5) {
-      console.warn(`Only found ${topDonors.length} donors in the last 30 days`);
+    const topUserIds = sortedUserEntries.map(([userId]) => userId);
+    console.log("top user IDs",topUserIds);
+    
+    // Fetch user details for top donors
+    const { data: usersData, error: userError } = await supabase
+      .from('users')
+      .select('id, full_name, avatar_url, email')
+      .in('id', topUserIds);
+    console.log("users data",usersData);
+    
+    if (userError) {
+      console.error('Error fetching users:', userError);
+      throw new Error('Failed to load user details');
     }
+
+    // Combine user info with donation amount
+    const topDonors: TopDonor[] = sortedUserEntries.map(([userId, amount]) => {
+      const user = usersData.find(u => u.id === userId);
+      console.log("user found",user);
+      
+      return {
+        id: userId,
+        name: user?.full_name || 'Anonymous',
+        email: user?.email || '',
+        avatar: user?.avatar_url || '',
+        amount,
+        role: determineRole(amount),
+      };
+    });
 
     return topDonors;
   } catch (error) {
@@ -587,6 +590,8 @@ export async function getTopDonors(): Promise<TopDonor[]> {
     throw error;
   }
 }
+
+
 function determineRole(amount: number): string {
   if (amount >= 10000) return 'Platinum Supporter';
   if (amount >= 5000) return 'Gold Supporter';
