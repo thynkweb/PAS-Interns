@@ -1,90 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Lock, ChevronDown, ChevronRight, Check } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { getTrainingModulesWithStatus } from '../lib/api';
+// import { getTrainingModulesWithStatus } from '../api/modules';
+
+interface TrainingModule {
+  id: string;
+  number: number;
+  title: string;
+  description?: string;
+  video_url: string;
+  progress_percentage: number;
+  is_completed: boolean;
+  is_locked: boolean;
+  letter?: string;
+}
 
 export default function OrientationModule() {
-  const [modules, setModules] = useState([]);
+  const [modules, setModules] = useState<TrainingModule[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [expandedModule, setExpandedModule] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        fetchModules(user.id);
-      } else {
-        // Handle not logged in state
-        setError("Please log in to access training modules");
-      }
-    }
-
-    fetchUser();
+    fetchModules();
   }, []);
 
-  async function fetchModules(userId:any) {
+  async function fetchModules() {
     try {
-      // Get all modules first
-      const { data: modulesData, error: modulesError } = await supabase
-        .from('training_modules')
-        .select('*')
-        .order('number', { ascending: true });
-
-      if (modulesError) throw modulesError;
+      // Use the API function to get modules with status
+      const modulesData = await getTrainingModulesWithStatus();
       
-      // Get user progress for all modules
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_progress') // Using the table name from your schema
-        .select('*')
-        .eq('user_id', userId);
-
-      if (progressError && progressError.code !== 'PGRST116') {
-        // PGRST116 is "not found" which is fine - user hasn't started any module
-        throw progressError;
-      }
-
-      // Process modules with progress data
-      let processedModules = modulesData.map((module, index) => {
-        // Find progress for this module
-        const moduleProgress = progressData?.find(p => p.module_id === module.id) || null;
-        
-        return {
-          ...module,
-          letter: String.fromCharCode(65 + (Number(module.number) - 1)), // Convert number to letter (1->A, 2->B, etc.)
-          progress_percentage: moduleProgress?.progress_percentage || 0,
-          is_completed: moduleProgress?.completed || false,
-          last_watched_position: moduleProgress?.last_watched_position || 0,
-          // First module is always unlocked, others are locked unless progress exists and is_locked is false
-          is_locked: index === 0 ? false : moduleProgress ? moduleProgress.is_locked : true
-        };
-      });
+      // Process modules - add letter property
+      let processedModules = modulesData.map((module, index) => ({
+        ...module,
+        letter: String.fromCharCode(65 + (Number(module.number) - 1)), // Convert number to letter (1->A, 2->B, etc.)
+      }));
       
-      setModules(processedModules || []);
+      setModules(processedModules);
       
       // Calculate overall progress
       if (processedModules.length > 0) {
         const totalProgress = processedModules.reduce((sum, module) => sum + module.progress_percentage, 0);
         setProgress(Math.round(totalProgress / processedModules.length));
         
-        // Set the first module as expanded by default (it's always unlocked)
-        if (processedModules[0]) {
-          setExpandedModule(processedModules[0].id);
+        // Set the first unlocked module as expanded by default
+        const firstUnlockedModule = processedModules.find(module => !module.is_locked);
+        if (firstUnlockedModule) {
+          setExpandedModule(firstUnlockedModule.id);
         }
       }
-    } catch (err) {
-      setError('Failed to load modules');
+    } catch (err: any) {
+      setError(err.message || 'Failed to load modules');
       console.error('Error fetching modules:', err);
     } finally {
       setLoading(false);
     }
   }
 
-  const toggleModule = (moduleId:any) => {
+  const toggleModule = (moduleId: string) => {
     if (expandedModule === moduleId) {
       setExpandedModule(null);
     } else {
@@ -92,8 +68,8 @@ export default function OrientationModule() {
     }
   };
 
-  const handlePlayClick = (module:any) => {
-    // Navigate to module player instead of opening in new tab
+  const handlePlayClick = (module: TrainingModule) => {
+    // Navigate to module player
     navigate(`/module/${module.id}`);
   };
 
@@ -111,7 +87,7 @@ export default function OrientationModule() {
         <div className="text-center">
           <p className="text-xl text-red-500">{error}</p>
           <button 
-            onClick={() => window.location.reload()}
+            onClick={() => fetchModules()}
             className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
           >
             Try Again
@@ -143,13 +119,16 @@ export default function OrientationModule() {
         
         {/* Module list */}
         <div className="space-y-3">
-          {modules.map((module, index) => (
+          {modules.map((module) => (
             <div key={module.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div 
                 className={`flex items-center p-4 cursor-pointer ${module.is_locked ? 'cursor-not-allowed' : 'hover:bg-gray-50'}`}
                 onClick={() => !module.is_locked && toggleModule(module.id)}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 ${module.is_locked ? 'bg-gray-300' : 'bg-[#4a6fa5] text-white'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 ${
+                  module.is_locked ? 'bg-gray-300' : 
+                  module.is_completed ? 'bg-green-500 text-white' : 'bg-[#4a6fa5] text-white'
+                }`}>
                   {module.letter}
                 </div>
                 <div className="flex-1">

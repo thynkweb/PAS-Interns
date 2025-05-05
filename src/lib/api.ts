@@ -983,27 +983,58 @@ export async function getChildById(childId: string): Promise<Child | null> {
     return null;
   }
 }
-export async function getTrainingModulesWithStatus() {
+export async function getTrainingModulesWithStatus(): Promise<TrainingModule[]> {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
     throw new Error('User not authenticated');
   }
   
-  const { data, error } = await supabase.rpc('get_modules_with_status', { 
-    user_id: user.id 
-  });
-  
-  if (error) {
-    console.error('Error fetching modules:', error);
+  try {
+    // Check if the RPC function exists
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_modules_with_status', { 
+      user_id: user.id 
+    });
+    
+    if (!rpcError && rpcData) {
+      return rpcData as TrainingModule[];
+    }
+    
+    // Fallback if RPC doesn't exist - manually fetch and combine data
+    const { data: modulesData, error: modulesError } = await supabase
+      .from('training_modules')
+      .select('*')
+      .order('number', { ascending: true });
+    
+    if (modulesError) throw modulesError;
+    
+    const { data: progressData, error: progressError } = await supabase
+      .from('user_progress')
+      .select('*')
+      .eq('user_id', user.id);
+    
+    if (progressError && progressError.code !== 'PGRST116') {
+      throw progressError;
+    }
+    
+    return modulesData.map((module, index) => {
+      const progress = progressData?.find(p => p.module_id === module.id);
+      
+      return {
+        ...module,
+        progress_percentage: progress?.progress_percentage || 0,
+        is_completed: progress?.completed || false,
+        is_locked: index === 0 ? false : progress ? progress.is_locked : true
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching modules with status:', error);
     throw error;
   }
-  
-  return data as TrainingModule[];
 }
 
 // Get a single module by ID
-export async function getModuleById(moduleId: string) {
+export async function getModuleById(moduleId: string): Promise<TrainingModule> {
   const { data, error } = await supabase
     .from('training_modules')
     .select('*')
@@ -1017,6 +1048,7 @@ export async function getModuleById(moduleId: string) {
   
   return data as TrainingModule;
 }
+
 
 // Get user progress for a module
 export async function getModuleProgress(moduleId: string) {
