@@ -1033,25 +1033,33 @@ export async function getTrainingModulesWithStatus(): Promise<TrainingModule[]> 
   }
 }
 
-// Get a single module by ID
-export async function getModuleById(moduleId: string): Promise<TrainingModule> {
+
+/**
+ * Get a module by its ID
+ * @param {string} moduleId - The module ID to fetch
+ * @returns {Promise<Object>} - The module data
+ */
+export const getModuleById = async (moduleId: string) => {
   const { data, error } = await supabase
-    .from('training_modules')
-    .select('*')
-    .eq('id', moduleId)
+    .from("training_modules")
+    .select("*")
+    .eq("id", moduleId)
     .single();
-    
+
   if (error) {
     console.error('Error fetching module:', error);
     throw error;
   }
   
-  return data as TrainingModule;
-}
+  return data;
+};
 
-
-// Get user progress for a module
-export async function getModuleProgress(moduleId: string) {
+/**
+ * Get module progress for the current user
+ * @param {string} moduleId - The module ID to get progress for
+ * @returns {Promise<Object>} - The progress data
+ */
+export const getModuleProgress = async (moduleId: string) => {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
@@ -1071,17 +1079,29 @@ export async function getModuleProgress(moduleId: string) {
   }
   
   return data;
-}
+};
 
-// Update module progress
-export async function updateModuleProgress(moduleId: string, progressPercentage: number, position: number, completed: boolean) {
+/**
+ * Update module progress in the database
+ * @param {string} moduleId - The module ID
+ * @param {number} progressPercentage - The progress percentage (0-100)
+ * @param {number} position - Current video position in seconds
+ * @param {boolean} completed - Whether the module is completed
+ * @returns {Promise<void>}
+ */
+export const updateModuleProgress = async (
+  moduleId: string, 
+  progressPercentage: number, 
+  position: number, 
+  completed: boolean
+) => {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
     throw new Error('User not authenticated');
   }
   
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('user_progress')
     .upsert({
       user_id: user.id,
@@ -1091,6 +1111,7 @@ export async function updateModuleProgress(moduleId: string, progressPercentage:
       completed: completed,
       completed_at: completed ? new Date().toISOString() : null
     }, { onConflict: 'user_id,module_id' });
+    console.log("upserted data",data);
     
   if (error) {
     console.error('Error updating progress:', error);
@@ -1101,49 +1122,83 @@ export async function updateModuleProgress(moduleId: string, progressPercentage:
   if (completed) {
     await unlockNextModule(moduleId);
   }
-}
+};
 
-// Unlock next module when current is completed
-export async function unlockNextModule(currentModuleId: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error('User not authenticated');
+/**
+ * Unlock the next module after completing the current one
+ * @param {string} currentModuleId - The current module ID
+ * @returns {Promise<void>}
+ */
+export const unlockNextModule = async (currentModuleId: string) => {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError) {
+    console.error("Auth error:", userError);
+    return;
   }
-  
+
+  if (!user) {
+    console.error("User not authenticated");
+    return;
+  }
+
   try {
-    // Get current module order
-    const { data: currentModule } = await supabase
+    // Get current module
+    const { data: currentModule, error: currentModuleError } = await supabase
       .from('training_modules')
       .select('order')
       .eq('id', currentModuleId)
       .single();
-    
-    if (!currentModule) return;
-    
-    // Get next module in sequence
-    const { data: nextModule } = await supabase
+
+    if (currentModuleError) {
+      console.error("Current module fetch error:", currentModuleError);
+      return;
+    }
+
+    console.log("Current module order:", currentModule?.order);
+
+    // Get next module
+    const { data: nextModule, error: nextModuleError } = await supabase
       .from('training_modules')
       .select('id')
-      .eq('order', currentModule.order + 1)
+      .eq('"order"', currentModule.order + 1)
       .single();
-    
-    if (!nextModule) return; // No next module
-    
-    // Unlock next module
-    await supabase
+
+    if (nextModuleError) {
+      console.error("Next module fetch error:", nextModuleError);
+      return;
+    }
+
+    if (!nextModule) {
+      console.log("No next module found");
+      return;
+    }
+
+    console.log("Next module to unlock:", nextModule.id);
+
+    // Upsert user_progress record
+    const { error: upsertError, data: upsertData } = await supabase
       .from('user_progress')
       .upsert({
         user_id: user.id,
         module_id: nextModule.id,
         progress_percentage: 0,
+        last_watched_position: 0,
         completed: false,
-        is_locked: false
-      }, { onConflict: 'user_id,module_id' });
+        is_locked: false,
+        completed_at: null
+      }, { onConflict: ['user_id', 'module_id'] });
+
+    if (upsertError) {
+      console.error("Upsert error:", upsertError);
+    } else {
+      console.log("Upserted user_progress:", upsertData);
+    }
+
   } catch (err) {
-    console.error('Error unlocking next module:', err);
+    console.error("Unexpected error in unlockNextModule:", err);
   }
-}
+};
 
 // Get comments for a module
 export async function getModuleComments(moduleId: string) {
